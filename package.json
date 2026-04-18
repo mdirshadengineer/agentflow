@@ -10,11 +10,12 @@
 		"build": "turbo run build",
 		"clean": "turbo run clean",
 		"format": "turbo run format",
-		"preinstall": "npx only-allow pnpm"
+		"preinstall": "pnpm exec only-allow pnpm"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.4.12",
 		"@types/node": "25.6.0",
+		"only-allow": "1.2.1",
 		"shx": "0.4.0",
 		"tsx": "4.21.0",
 		"turbo": "2.9.6",
