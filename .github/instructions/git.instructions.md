@@ -4,7 +4,7 @@ Always follow these rules:
 
 ## Commit Messages
 - Use Conventional Commits format:
-  <type>(scope): <short description>
+  `<type>(scope): <short description>`
 - Types allowed: feat, fix, docs, style, refactor, test, chore, perf, ci
 - Keep subject under 72 characters
 - Use imperative tone (e.g., "add", not "added")
@@ -12,10 +12,10 @@ Always follow these rules:
 
 ## Branching Strategy
 - Use structured branch names:
-  feature/<name>
-  bugfix/<name>
-  hotfix/<name>
-  chore/<name>
+  `feature/<name>`
+  `bugfix/<name>`
+  `hotfix/<name>`
+  `chore/<name>`
 - Avoid working directly on main/master
 
 ## Safety Rules
