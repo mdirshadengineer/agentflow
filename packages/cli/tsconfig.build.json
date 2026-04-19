@@ -1,0 +1,11 @@
+{
+	"extends": "./tsconfig.json",
+	"compilerOptions": {
+		"outDir": "dist",
+		"declaration": true,
+		"sourceMap": false,
+		"removeComments": true,
+		"tsBuildInfoFile": "node_modules/.cache/tsconfig.build.tsbuildinfo"
+	},
+	"exclude": ["dist", "node_modules", "src/server/dev"]
+}
