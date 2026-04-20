@@ -1,0 +1,50 @@
+{
+	"name": "@agentflow/cli",
+	"type": "module",
+	"version": "0.0.0",
+	"description": "AgentFlow CLI - A powerful command-line interface for managing and orchestrating your agent-based workflows with ease.",
+	"license": "Apache-2.0",
+	"bin": {
+		"agf": "bin/agentflow",
+		"agentflow": "bin/agentflow"
+	},
+	"publishConfig": {
+		"access": "public"
+	},
+	"author": {
+		"name": "mdirshadengineer",
+		"email": "mdirshadengineer@gmail.com",
+		"url": "https://mdirshad.vercel.app"
+	},
+	"engines": {
+		"node": ">=22.16"
+	},
+	"files": [
+		"dist",
+		"bin",
+		"README.md",
+		"CHANGELOG.md",
+		"package.json"
+	],
+	"scripts": {
+		"start": "node ./bin/agentflow",
+		"build": "shx rm -rf dist && tsc -b tsconfig.build.json",
+		"lint": "biome check",
+		"format": "biome format --write",
+		"typecheck": "tsc --noEmit",
+		"clean": "shx rm -rf node_modules .turbo dist"
+	},
+	"dependencies": {
+		"@fastify/autoload": "6.3.1",
+		"arktype": "2.2.0",
+		"fastify": "5.8.5",
+		"reflect-metadata": "0.2.2",
+		"semver": "7.7.4",
+		"source-map-support": "0.5.21",
+		"tsyringe": "4.10.0"
+	},
+	"devDependencies": {
+		"@types/node": "25.6.0",
+		"typescript": "6.0.3"
+	}
+}

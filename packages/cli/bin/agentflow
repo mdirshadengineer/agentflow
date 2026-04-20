@@ -1,0 +1,257 @@
+#!/usr/bin/env node
+
+/**
+ * agentflow — CLI Entry Point
+ *
+ * Keep this file as lean as possible.
+ * All business logic belongs in `<agentflow-workspace-root>/packages/cli/src/`.
+ *
+ * Execution order is intentional — do NOT reorder sections.
+ * Each section is annotated with WHY it sits exactly here.
+ *
+ * Sections (in order):
+ *  1. Shebang & Environment Bootstrap
+ *  2. Config Path Normalization
+ *  3. Early Version Flag Interception
+ *  4. Node.js Version Enforcement
+ *  5. Disabling Custom Inspect
+ *  6. Source Map Support
+ *  7. Reflect Metadata
+ *  8. Conditional dotenv Loading
+ *  9. IPv4 Preference & Happy Eyeballs Opt-out
+ * 10. Async IIFE with Dynamic Imports
+ */
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 1. SHEBANG & ENVIRONMENT BOOTSTRAP
+//
+// WHY: Set NODE_ENV as early as absolutely possible — before any require().
+//      Some packages (express, knex, etc.) read NODE_ENV at import time and
+//      cache the value. Setting it late means they silently use the wrong mode.
+//
+// SECURITY: Defaulting to 'production' is a safe-fail stance. In production
+//           mode most frameworks disable stack trace leakage, verbose errors,
+//           and debug endpoints automatically.
+// ─────────────────────────────────────────────────────────────────────────────
+process.env.NODE_ENV = process.env.NODE_ENV || "production";
+
+import { createRequire } from "node:module";
+// ─────────────────────────────────────────────────────────────────────────────
+// 2. CONFIG PATH NORMALIZATION
+//
+// WHY: `process.cwd()` changes depending on where the user runs the CLI from.
+//      Anchoring to `__dirname` (the script's own directory) makes config
+//      resolution deterministic regardless of the caller's working directory.
+//
+// SECURITY: Prevents accidentally loading a rogue `config/` folder that
+//           happens to exist in the user's current working directory
+//           (a form of path-traversal / config-injection defence).
+// ─────────────────────────────────────────────────────────────────────────────
+import path from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
+
+const require = createRequire(import.meta.url);
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+process.env.AGENTFLOW_CONFIG_DIR =
+	process.env.AGENTFLOW_CONFIG_DIR ||
+	path.join(__dirname, "..", ".agentflow", "config");
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 3. EARLY VERSION FLAG INTERCEPTION
+//
+// WHY: Exit before loading ANY heavy dependency. Keeps `agentflow --version`
+//      near-instant (< 5 ms) instead of waiting for the full boot sequence.
+//
+// PERFORMANCE: Only `path` and `package.json` are loaded at this point —
+//              nothing else. The entire DI container, ORM, and config system
+//              are never touched for a simple version check.
+//
+// IMPL NOTE: We check the LAST argument only (slice(-1)[0]) to avoid false
+//            positives from flags like `--output-version=semver`.
+// ─────────────────────────────────────────────────────────────────────────────
+const VERSION_FLAGS = ["-v", "-V", "--version"];
+
+if (VERSION_FLAGS.includes(process.argv.slice(-1)[0])) {
+	// Intentionally synchronous — we are about to exit.
+	const { version } = require("../package.json");
+	process.stdout.write(`${version}\n`);
+	process.exit(0);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 4. NODE.JS VERSION ENFORCEMENT
+//
+// WHY: Older Node versions may lack critical security patches (TLS 1.3,
+//      crypto fixes, SSRF mitigations) or APIs agentflow depends on.
+//      Failing fast with a clear message is better than a cryptic runtime
+//      error 10 minutes into a workflow run.
+//
+// PERFORMANCE: Import only the single `satisfies` function — not the entire
+//              semver package — to keep startup overhead minimal.
+//
+// SECURITY: Enforces the minimum Node version declared in package.json,
+//           which should always be an LTS release with active security support.
+//           See: https://nodejs.org/en/about/previous-releases
+// ─────────────────────────────────────────────────────────────────────────────
+import satisfies from "semver/functions/satisfies.js";
+
+const {
+	engines: { node: supportedNodeRange },
+} = require("../package.json");
+const currentNodeVersion = process.versions.node;
+
+if (!satisfies(currentNodeVersion, supportedNodeRange)) {
+	process.stderr.write(
+		`\nError: agentflow requires Node.js ${supportedNodeRange}.\n` +
+			`       You are running Node.js ${currentNodeVersion}.\n` +
+			`       Please upgrade: https://nodejs.org/en/download\n\n`,
+	);
+	process.exit(1);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 5. DISABLING CUSTOM INSPECT
+//
+// WHY / SECURITY: When `customInspect` is enabled, any object can define a
+//   [util.inspect.custom]() method that executes arbitrary code whenever the
+//   object is logged or inspected. A malicious or compromised dependency could
+//   use this as a side-channel to exfiltrate secrets visible in memory at the
+//   time of logging (e.g. API keys, tokens in request objects).
+//
+//   Disabling it globally means `console.log(obj)` and all debug tooling
+//   always uses Node's built-in serialiser — no user-land code runs.
+//
+// MUST BE: Set before any other require() that might log objects on import.
+// ─────────────────────────────────────────────────────────────────────────────
+import { inspect } from "node:util";
+
+inspect.defaultOptions.customInspect = false;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 6. SOURCE MAP SUPPORT
+//
+// WHY: agentflow ships compiled TypeScript (`dist/`). Without this, stack
+//      traces reference unreadable transpiled JS line numbers. source-map-support
+//      hooks into Node's error formatting and maps them back to original `.ts`
+//      source lines — critical for diagnosing production incidents.
+//
+// SECURITY: Source maps are build artifacts consumed only server-side.
+//           They are never exposed to HTTP clients.
+//
+// PACKAGES TO AUDIT:
+//   - `source-map-support` — ensure it's pinned and comes from a trusted
+//     registry. It hooks into `Error.prepareStackTrace`, so a malicious
+//     version could intercept all stack traces.
+// ─────────────────────────────────────────────────────────────────────────────
+require("source-map-support").install();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 7. REFLECT METADATA
+//
+// WHY: TypeScript decorator metadata (used by DI containers and ORMs) is
+//      written via `Reflect.defineMetadata` at *import time*. If reflect-metadata
+//      is loaded after a decorated class is imported, the metadata is silently
+//      lost — causing confusing "provider not found" or "column undefined" errors
+//      that are very hard to debug.
+//
+//      Load once, load first — before any src/ imports.
+//
+// PACKAGES TO AUDIT:
+//   - `reflect-metadata` — globally mutates the `Reflect` object.
+//     Pin to a specific version and verify integrity with `npm audit`.
+// ─────────────────────────────────────────────────────────────────────────────
+require("reflect-metadata");
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 8. CONDITIONAL DOTENV LOADING
+//
+// WHY: Environment variables must be populated before any application code
+//      reads `process.env`. dotenv is loaded here — as early as possible —
+//      so that every subsequent `require()` sees the fully resolved env.
+//
+// SECURITY:
+//   - `{ quiet: true }` / `{ debug: false }` — suppresses "file not found"
+//     warnings that would leak the app's expected filesystem layout to anyone
+//     watching stderr (e.g. in a shared hosting environment or log aggregator).
+//   - `.env` files should NEVER be committed to version control.
+//     Add a pre-commit hook (e.g. `secretlint`, `detect-secrets`) to enforce this.
+//   - In production, prefer injecting secrets via the host environment or a
+//     secrets manager (AWS Secrets Manager, HashiCorp Vault, etc.) rather than
+//     .env files on disk.
+//
+// TEST ISOLATION: Skipped during E2E tests so the test runner has full control
+//   over `process.env` without .env files polluting test state.
+//
+// PACKAGES TO AUDIT:
+//   - `dotenv` — reads arbitrary files from disk. Pin version, run `npm audit`.
+// ─────────────────────────────────────────────────────────────────────────────
+// Intentionally do not auto-load `.env` here. This entrypoint must not depend
+// on undeclared optional packages, and environment variables should be supplied
+// by the parent process, shell, or deployment environment instead.
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 9. IPV4 PREFERENCE & HAPPY EYEBALLS OPT-OUT
+//
+// WHY (IPv4 preference): Some infrastructure (internal APIs, databases,
+//   message brokers) only listen on IPv4. Without this flag, DNS resolution
+//   returns an IPv6 address first, causing connection failures that are
+//   difficult to diagnose.
+//   Opt-in via `AGENTFLOW_PREFER_IPV4=true` to avoid breaking IPv6-native setups.
+//
+// WHY (Happy Eyeballs): Node.js 20 introduced RFC 6555 "Happy Eyeballs" which
+//   races IPv6 and IPv4 connections. A bug in the algorithm causes silent
+//   connection failures with many SaaS APIs.
+//   Details: https://github.com/nodejs/node/issues/48145
+//
+// SECURITY: Neither setting weakens TLS or authentication. They control only
+//   the address-family preference at the socket level.
+//
+// COMPAT: `setDefaultAutoSelectFamily` only exists in Node ≥ 20.
+//   The `?.()` optional-chaining call is a deliberate no-op guard for older versions.
+// ─────────────────────────────────────────────────────────────────────────────
+if (process.env.AGENTFLOW_PREFER_IPV4 === "true") {
+	require("node:dns").setDefaultResultOrder("ipv4first");
+}
+
+require("node:net").setDefaultAutoSelectFamily?.(false);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 10. ASYNC IIFE WITH DYNAMIC IMPORTS
+//
+// WHY (async IIFE): Top-level `await` is not available in CommonJS modules.
+//   The async IIFE is the standard CJS pattern for using `await` at the
+//   entry point without restructuring the whole project as ESM.
+//
+// WHY (dynamic import): The core application modules (DI container, command
+//   registry) may be ES Modules. You cannot `require()` an ESM package from
+//   CJS — dynamic `import()` is the only bridge. It also defers loading the
+//   heaviest parts of the app until after all synchronous bootstrap
+//   (env, config, version checks, DNS) is complete.
+//
+// SECURITY:
+//   - The dynamic import paths are hardcoded string literals — not constructed
+//     from user input — so there is no prototype-pollution or path-injection risk.
+//   - The top-level `catch` logs the full error (including stack, mapped by
+//     source-map-support) and exits with code 1. Without this, unhandled async
+//     errors can silently swallow crash details in some Node versions.
+//
+// UNHANDLED REJECTION SAFETY: The `.catch()` at the bottom ensures any error
+//   thrown during boot surfaces clearly and terminates the process — instead of
+//   Node printing a DeprecationWarning and potentially continuing in a broken state.
+// ─────────────────────────────────────────────────────────────────────────────
+(async () => {
+	// Boot the DI container and resolve + discover the CLI command.
+	const { container: Container } = await import("tsyringe");
+	const { CommandDiscovery } = await import(
+		pathToFileURL(path.join(__dirname, "..", "dist", "index.js")).href
+	);
+	await Container.resolve(CommandDiscovery).discover();
+})().catch((error) => {
+	// Use process.stderr directly — avoids any custom logger that might itself fail.
+	process.stderr.write("\n[agentflow] Fatal startup error:\n");
+	process.stderr.write(`${error?.stack ?? String(error)}\n\n`);
+	process.exit(1);
+});

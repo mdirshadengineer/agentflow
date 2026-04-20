@@ -1,0 +1,34 @@
+{
+	"name": "agentflow-monorepo",
+	"version": "1.0.0",
+	"private": true,
+	"scripts": {
+		"dev": "turbo run dev",
+		"test": "turbo run test",
+		"lint": "turbo run lint",
+		"start": "turbo run start",
+		"build": "turbo run build",
+		"clean": "turbo run clean",
+		"format": "turbo run format",
+		"changeset": "changeset",
+		"release": "changeset publish",
+		"version-packages": "changeset version",
+		"preinstall": "pnpm exec only-allow pnpm"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.4.12",
+		"@changesets/changelog-github": "0.6.0",
+		"@changesets/cli": "2.31.0",
+		"@types/node": "25.6.0",
+		"only-allow": "1.2.1",
+		"shx": "0.4.0",
+		"tsx": "4.21.0",
+		"turbo": "2.9.6",
+		"typescript": "6.0.3"
+	},
+	"packageManager": "pnpm@10.33.0",
+	"license": "Apache-2.0",
+	"engines": {
+		"node": ">=22"
+	}
+}

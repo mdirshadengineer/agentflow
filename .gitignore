@@ -1,0 +1,34 @@
+# Node.js dependencies
+node_modules
+
+# Optional: Ignore environment variable files
+.env*
+!.env.example
+
+# Optional: Ignore log files
+logs
+*.log
+
+# Optional: Ignore build artifacts
+build
+dist
+output
+out
+coverage
+
+# Optional: Ignore IDE/editor specific files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+
+# Optional: Ignore OS generated files
+.DS_Store
+Thumbs.db
+
+# Turborepo specific
+.turbo
+
+# Project specific
+compiled
