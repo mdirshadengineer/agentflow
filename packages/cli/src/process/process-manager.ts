@@ -47,12 +47,16 @@ function trySend(pid: number, signal: string | number): boolean {
 export class ProcessManager {
 	constructor(private store = new ProcessStore()) {}
 
+	private isDetachArg(arg: string): boolean {
+		return arg === "--detach" || arg.startsWith("--detach=");
+	}
+
 	// -----------------------------
 	// Start (Detached)
 	// -----------------------------
 	startDetached(args: string[], id = "default"): number {
 		// IMPORTANT: ensure no recursive detach
-		const filteredArgs = args.filter((arg) => arg !== "--detach");
+		const filteredArgs = args.filter((arg) => !this.isDetachArg(arg));
 		const child = spawn(process.execPath, filteredArgs, {
 			detached: true,
 			stdio: "ignore",
