@@ -12,6 +12,7 @@ import { ProcessManager } from "../process/process-manager.js";
 // -----------------------------
 const statusCommandFlags = type({
 	"json?": "boolean",
+	"help?": "boolean",
 });
 
 type StatusCommandFlags = typeof statusCommandFlags.infer;

@@ -24,8 +24,8 @@ const ALREADY_GONE_CODES = new Set(["ESRCH", "EPERM"]);
 /**
  * Attempts to send `signal` to `pid`.
  *
- * @returns `true`  – signal delivered (or process already gone → treat as stopped)
- *          `false` – delivery failed for an unexpected reason
+ * @returns `true` if the signal was delivered, or if the process is already gone
+ * @throws Re-throws unexpected failures when sending the signal
  */
 function trySend(pid: number, signal: string | number): boolean {
 	try {

@@ -2,6 +2,7 @@
 "@agentflow/cli": minor
 ---
 
-initial release for @agentflow/cli
+Initial release for @agentflow/cli.
 
-commands included start, status and stop these commands are related to fastify server right now fastify server is just have one endpoint for testing.
+Includes the `start`, `status`, and `stop` commands for the Fastify server.
+The Fastify server currently exposes only a single test endpoint.

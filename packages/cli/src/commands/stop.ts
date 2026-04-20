@@ -13,6 +13,7 @@ import { ProcessManager } from "../process/process-manager.js";
 const stopCommandFlags = type({
 	"id?": "string",
 	"force?": "boolean",
+	"help?": "boolean",
 });
 
 type StopCommandFlags = typeof stopCommandFlags.infer;

@@ -66,8 +66,29 @@ class AgentflowRuntime {
 	}
 
 	async stop() {
-		for (const service of this.services.slice().reverse()) {
-			await service.stop();
+		const stopErrors: Error[] = [];
+		for (const [index, service] of this.services.slice().reverse().entries()) {
+			try {
+				await service.stop();
+			} catch (error) {
+				stopErrors.push(
+					error instanceof Error
+						? new Error(
+								`Failed to stop service at reverse index ${index}: ${error.message}`,
+								{ cause: error },
+							)
+						: new Error(
+								`Failed to stop service at reverse index ${index}: ${String(error)}`,
+								{ cause: error },
+							),
+				);
+			}
+		}
+		if (stopErrors.length > 0) {
+			throw new AggregateError(
+				stopErrors,
+				"Failed to stop one or more services.",
+			);
 		}
 	}
 }
