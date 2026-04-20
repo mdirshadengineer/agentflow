@@ -1,7 +1,7 @@
 {
 	"name": "@agentflow/cli",
 	"type": "module",
-	"version": "0.0.0",
+	"version": "0.1.0",
 	"description": "AgentFlow CLI - A powerful command-line interface for managing and orchestrating your agent-based workflows with ease.",
 	"license": "Apache-2.0",
 	"bin": {
