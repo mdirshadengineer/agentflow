@@ -20,17 +20,17 @@ class CommandDiscovery {
 		}
 	}
 
-	public discover() {
+	public async discover() {
 		if (this.showGlobalHelp) {
 			printGlobalHelp(getCommandDefinitions());
-			return;
+			return 0;
 		}
 
 		const definition = getCommandDefinition(this.commandName);
 		if (!definition) {
 			console.error(`Command "${this.commandName}" not found.`);
 			printGlobalHelp(getCommandDefinitions());
-			return;
+			return 1;
 		}
 
 		const commandContext = parseCommandContext(process.argv.slice(3)); // slice(3) skips node, script, and command name
