@@ -27,14 +27,13 @@ class CommandDiscovery {
 		}
 
 		const definition = getCommandDefinition(this.commandName);
-
 		if (!definition) {
 			console.error(`Command "${this.commandName}" not found.`);
 			printGlobalHelp(getCommandDefinitions());
 			return;
 		}
 
-		const commandContext = parseCommandContext(process.argv.slice(2));
+		const commandContext = parseCommandContext(process.argv.slice(3)); // slice(3) skips node, script, and command name
 		return this.executeCommand(definition, commandContext);
 	}
 
@@ -43,7 +42,6 @@ class CommandDiscovery {
 		context: CommandContext,
 	): Promise<number> {
 		let flags: Flags;
-
 		try {
 			flags = definition.parseFlags
 				? definition.parseFlags(context.flags)
@@ -79,7 +77,6 @@ class CommandDiscovery {
 		if (error instanceof Error) {
 			return error.message;
 		}
-
 		return String(error);
 	}
 }

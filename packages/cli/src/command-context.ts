@@ -4,6 +4,14 @@ interface CommandContext {
 	flags: Record<string, unknown>;
 }
 
+function coerceValue(raw: string): unknown {
+	if (raw === "true") return true;
+	if (raw === "false") return false;
+	const num = Number(raw);
+	if (raw !== "" && !Number.isNaN(num)) return num;
+	return raw;
+}
+
 function parseCommandContext(argv: readonly string[]): CommandContext {
 	const args: string[] = [];
 	const flags: Record<string, unknown> = {};
@@ -11,7 +19,6 @@ function parseCommandContext(argv: readonly string[]): CommandContext {
 
 	for (let index = 0; index < argv.length; index += 1) {
 		const token = argv[index];
-
 		if (!token) {
 			continue;
 		}
@@ -32,13 +39,13 @@ function parseCommandContext(argv: readonly string[]): CommandContext {
 		}
 
 		if (inlineValue !== undefined) {
-			flags[flagName] = inlineValue;
+			flags[flagName] = coerceValue(inlineValue);
 			continue;
 		}
 
 		const nextToken = argv[index + 1];
 		if (nextToken && !nextToken.startsWith("--")) {
-			flags[flagName] = nextToken;
+			flags[flagName] = coerceValue(nextToken);
 			index += 1;
 			continue;
 		}

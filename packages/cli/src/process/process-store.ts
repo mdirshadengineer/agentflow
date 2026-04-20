@@ -1,4 +1,5 @@
 import {
+	chmodSync,
 	existsSync,
 	mkdirSync,
 	readFileSync,
@@ -23,33 +24,31 @@ export class ProcessStore {
 
 	load(): ProcessRecord[] {
 		this.ensureDir();
-
 		if (!existsSync(this.file)) return [];
-
 		try {
 			const content = readFileSync(this.file, "utf-8");
 			return JSON.parse(content) as ProcessRecord[];
 		} catch {
-			// corrupted file fallback
 			return [];
 		}
 	}
 
 	save(processes: ProcessRecord[]): void {
 		this.ensureDir();
-
 		const tmp = `${this.file}.tmp`;
-		writeFileSync(tmp, JSON.stringify(processes, null, 2));
+		// mode: 0o600 is a best-effort hint, but it is ANDed with ~umask at the
+		// kernel level, so it cannot be fully trusted on its own.
+		writeFileSync(tmp, JSON.stringify(processes, null, 2), { mode: 0o600 });
 		renameSync(tmp, this.file);
+		// chmodSync sets the mode absolutely (not relative to umask), guaranteeing
+		// the final file is always owner-only regardless of the process umask.
+		chmodSync(this.file, 0o600);
 	}
 
 	add(record: ProcessRecord): void {
 		const processes = this.load();
-
-		// overwrite same id (current design: single instance "default")
 		const updated = processes.filter((p) => p.id !== record.id);
 		updated.push(record);
-
 		this.save(updated);
 	}
 

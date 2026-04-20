@@ -13,6 +13,8 @@
 
 		"resolveJsonModule": true,
 		"isolatedModules": true,
+		"experimentalDecorators": true,
+		"emitDecoratorMetadata": true,
 
 		"types": ["node"],
 		"rootDir": "./src",

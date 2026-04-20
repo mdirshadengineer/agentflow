@@ -6,6 +6,44 @@ import {
 import { ProcessStore } from "./process-store.js";
 import type { ProcessRecord } from "./process-types.js";
 
+// Windows does not support POSIX signals — process.kill() only accepts
+// numeric signals there, and only SIGKILL (9) is universally honoured.
+// We normalise to the numeric equivalents so the same code path works
+// on every platform.
+const SIG = {
+	TERM: process.platform === "win32" ? 9 : "SIGTERM", // no SIGTERM on Windows
+	KILL: 9, // SIGKILL (numeric) is cross-platform safe
+} as const;
+
+/** Signal error codes that mean the process is already gone. */
+const ALREADY_GONE_CODES = new Set(["ESRCH", "EPERM"]);
+// EPERM can surface on some Linux kernels when the PID slot has been
+// recycled and the caller lacks permission to signal the new owner;
+// it is safer to treat it as "not our process anymore" than to abort.
+
+/**
+ * Attempts to send `signal` to `pid`.
+ *
+ * @returns `true`  – signal delivered (or process already gone → treat as stopped)
+ *          `false` – delivery failed for an unexpected reason
+ */
+function trySend(pid: number, signal: string | number): boolean {
+	try {
+		process.kill(pid, signal);
+		return true;
+	} catch (err: unknown) {
+		const code = (err as NodeJS.ErrnoException).code ?? "";
+		if (ALREADY_GONE_CODES.has(code)) {
+			// Race: process exited between isAlive() and kill() — that's fine,
+			// our goal (the process is no longer running) is already achieved.
+			return true;
+		}
+		// Unexpected error (e.g. EINVAL for a bad signal on this platform).
+		// Bubble it up so the caller can decide.
+		throw err;
+	}
+}
+
 export class ProcessManager {
 	constructor(private store = new ProcessStore()) {}
 
@@ -15,12 +53,10 @@ export class ProcessManager {
 	startDetached(args: string[], id = "default"): number {
 		// IMPORTANT: ensure no recursive detach
 		const filteredArgs = args.filter((arg) => arg !== "--detach");
-
 		const child = spawn(process.execPath, filteredArgs, {
 			detached: true,
 			stdio: "ignore",
 		});
-
 		child.unref();
 
 		if (child.pid === undefined) {
@@ -38,7 +74,6 @@ export class ProcessManager {
 		};
 
 		this.store.add(record);
-
 		return record.pid;
 	}
 
@@ -47,20 +82,17 @@ export class ProcessManager {
 	// -----------------------------
 	list(): ProcessRecord[] {
 		const processes = this.store.load();
-
 		const alive: ProcessRecord[] = [];
 
 		for (const p of processes) {
 			if (this.isAlive(p.pid)) {
 				alive.push(p);
-			} else {
-				// stale → dropped
 			}
+			// stale → dropped
 		}
 
 		// persist cleaned state
 		this.store.save(alive);
-
 		return alive;
 	}
 
@@ -75,31 +107,44 @@ export class ProcessManager {
 			throw new Error(`Process "${id}" not found`);
 		}
 
+		// Helper: remove from store and return — used in every exit path so
+		// we never skip cleanup even when signals race with natural exit.
+		const cleanup = () => this.store.remove(id);
+
 		if (!this.isAlive(target.pid)) {
-			// already dead → cleanup
-			this.store.remove(id);
+			cleanup();
 			return;
 		}
 
 		if (force) {
-			process.kill(target.pid, "SIGKILL");
-			this.store.remove(id);
+			// trySend treats ESRCH/EPERM as success, so cleanup always runs.
+			trySend(target.pid, SIG.KILL);
+			cleanup();
 			return;
 		}
 
-		// graceful shutdown
-		process.kill(target.pid, "SIGTERM");
+		// ── Graceful shutdown ────────────────────────────────────────────────
+		// Send SIGTERM (or numeric 9 on Windows). If the process is already
+		// gone at this instant, trySend returns true and we skip the wait.
+		const termDelivered = trySend(target.pid, SIG.TERM);
 
-		const exited = await this.waitForExit(
-			target.pid,
-			GRACEFUL_SHUTDOWN_TIMEOUT_MS,
-		);
+		if (termDelivered) {
+			const exited = await this.waitForExit(
+				target.pid,
+				GRACEFUL_SHUTDOWN_TIMEOUT_MS,
+			);
 
-		if (!exited) {
-			process.kill(target.pid, "SIGKILL");
+			if (!exited) {
+				// Escalate to SIGKILL. Again, guard the race: the process might
+				// have exited in the brief gap between waitForExit timing out and
+				// this call.
+				trySend(target.pid, SIG.KILL);
+			}
 		}
 
-		this.store.remove(id);
+		// Cleanup runs unconditionally — whether SIGTERM was delivered, the
+		// process raced to exit, or SIGKILL was needed.
+		cleanup();
 	}
 
 	// -----------------------------
@@ -116,12 +161,10 @@ export class ProcessManager {
 
 	private async waitForExit(pid: number, timeoutMs: number): Promise<boolean> {
 		const start = Date.now();
-
 		while (Date.now() - start < timeoutMs) {
 			if (!this.isAlive(pid)) return true;
 			await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
 		}
-
 		return false;
 	}
 }

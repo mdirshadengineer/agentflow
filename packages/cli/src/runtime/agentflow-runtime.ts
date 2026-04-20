@@ -21,10 +21,11 @@ class AgentflowRuntime {
 					await service.start();
 					startedServices.push(service);
 				} catch (error) {
-					const message =
-						error instanceof Error ? error.message : String(error);
+					// Preserve the original error as `cause` so callers retain the full
+					// stack trace and any structured properties on the underlying error.
 					throw new Error(
-						`Failed to start service at index ${index}: ${message}`,
+						`Failed to start service at index ${index}: ${error instanceof Error ? error.message : String(error)}`,
+						{ cause: error },
 					);
 				}
 			}
@@ -36,20 +37,27 @@ class AgentflowRuntime {
 					await service.stop();
 				} catch (stopError) {
 					if (!cleanupError) {
+						// Preserve the original stop error as `cause` for the same reason.
 						cleanupError =
 							stopError instanceof Error
 								? stopError
-								: new Error(String(stopError));
+								: new Error(String(stopError), { cause: stopError });
 					}
 				}
 			}
 
 			const startError =
-				error instanceof Error ? error : new Error(String(error));
+				error instanceof Error
+					? error
+					: new Error(String(error), { cause: error });
 
 			if (cleanupError) {
+				// Surface both the startup failure and the cleanup failure.
+				// The startup error is attached as `cause` so its original chain
+				// (including its own `cause`) is fully reachable.
 				throw new Error(
 					`${startError.message}. Cleanup failed: ${cleanupError.message}`,
+					{ cause: startError },
 				);
 			}
 
