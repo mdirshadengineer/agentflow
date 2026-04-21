@@ -1,5 +1,11 @@
 # @mdirshadengineer/agentflow-cli
 
+## 0.2.1
+
+### Patch Changes
+
+- [#11](https://github.com/mdirshadengineer/agentflow/pull/11) [`8392313`](https://github.com/mdirshadengineer/agentflow/commit/8392313528977c3e9a76c53b61fb1b183e68f69d) Thanks [@mdirshadengineer](https://github.com/mdirshadengineer)! - github actions deployment pipeline fix for build code `dist` folder missing
+
 ## 0.2.0
 
 ### Minor Changes
