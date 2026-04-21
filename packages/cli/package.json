@@ -1,5 +1,5 @@
 {
-	"name": "@agentflow/cli",
+	"name": "@mdirshadengineer/agentflow-cli",
 	"type": "module",
 	"version": "0.1.0",
 	"description": "AgentFlow CLI - A powerful command-line interface for managing and orchestrating your agent-based workflows with ease.",
