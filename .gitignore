@@ -15,9 +15,12 @@ dist
 output
 out
 coverage
+storybook-static
+playwright-report
 
 # Optional: Ignore IDE/editor specific files
-.vscode/
+.vscode/*
+!.vscode/extensions.json
 .idea/
 *.suo
 *.ntvs*
@@ -32,3 +35,14 @@ Thumbs.db
 
 # Project specific
 compiled
+
+# Optional: Ignore local configuration files
+*.local
+
+# Optional: Ignore lock files (if you want to use a different package manager)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Tanstack
+.tanstack
