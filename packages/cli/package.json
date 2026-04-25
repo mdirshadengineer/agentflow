@@ -13,19 +13,17 @@
 	},
 	"author": {
 		"name": "mdirshadengineer",
-		"email": "mdirshadengineer@gmail.com",
+		"email": "mdirshadengineer+github@gmail.com",
 		"url": "https://mdirshad.vercel.app"
+	},
+	"repository": {
+		"directory": "packages/cli",
+		"type": "git"
 	},
 	"engines": {
 		"node": ">=22.16"
 	},
-	"files": [
-		"dist",
-		"bin",
-		"README.md",
-		"CHANGELOG.md",
-		"package.json"
-	],
+	"files": ["dist", "bin", "README.md", "CHANGELOG.md", "package.json"],
 	"scripts": {
 		"start": "node ./bin/agentflow",
 		"dev": "tsx watch src/dev/main.ts",

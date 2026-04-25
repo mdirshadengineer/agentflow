@@ -7,9 +7,26 @@
 	},
 	"formatter": {
 		"enabled": true,
+		"formatWithErrors": false,
 		"indentStyle": "tab",
-		"bracketSameLine": true,
-		"bracketSpacing": true
+		"indentWidth": 2,
+		"lineEnding": "lf",
+		"lineWidth": 80,
+		"attributePosition": "auto",
+		"bracketSameLine": false,
+		"bracketSpacing": true,
+		"expand": "auto",
+		"useEditorconfig": false,
+		"includes": [
+			"**",
+			"!**/node_modules/",
+			"!**/coverage/",
+			"!**/.pnpm-store/",
+			"!**/pnpm-lock.yaml",
+			"!**/package-lock.json",
+			"!**/pnpm-lock.yaml",
+			"!**/yarn.lock"
+		]
 	},
 	"javascript": {
 		"assist": {
