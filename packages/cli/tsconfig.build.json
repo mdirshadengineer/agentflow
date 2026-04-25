@@ -7,5 +7,5 @@
 		"removeComments": true,
 		"tsBuildInfoFile": "node_modules/.cache/tsconfig.build.tsbuildinfo"
 	},
-	"exclude": ["dist", "node_modules", "src/server/dev"]
+	"exclude": ["dist", "node_modules", "src/dev"]
 }

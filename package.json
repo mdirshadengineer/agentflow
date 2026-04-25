@@ -6,13 +6,12 @@
 		"dev": "turbo run dev",
 		"test": "turbo run test",
 		"lint": "turbo run lint",
-		"start": "turbo run start",
 		"build": "turbo run build",
 		"clean": "turbo run clean",
 		"format": "turbo run format",
 		"changeset": "changeset",
-		"release": "changeset publish",
 		"version-packages": "changeset version",
+		"publish-packages": "pnpm run build && changeset publish",
 		"preinstall": "pnpm exec only-allow pnpm"
 	},
 	"devDependencies": {
