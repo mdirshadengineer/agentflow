@@ -1,7 +1,7 @@
 {
 	"name": "@mdirshadengineer/agentflow-cli",
 	"type": "module",
-	"version": "0.2.1",
+	"version": "1.0.0",
 	"description": "AgentFlow CLI - A powerful command-line interface for managing and orchestrating your agent-based workflows with ease.",
 	"license": "Apache-2.0",
 	"bin": {
@@ -23,7 +23,13 @@
 	"engines": {
 		"node": ">=22.16"
 	},
-	"files": ["dist", "bin", "README.md", "CHANGELOG.md", "package.json"],
+	"files": [
+		"dist",
+		"bin",
+		"README.md",
+		"CHANGELOG.md",
+		"package.json"
+	],
 	"scripts": {
 		"start": "node ./bin/agentflow",
 		"dev": "tsx watch src/dev/main.ts",
