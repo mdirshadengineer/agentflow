@@ -1,5 +1,11 @@
 # @mdirshadengineer/agentflow-cli
 
+## 1.0.0
+
+### Major Changes
+
+- [#16](https://github.com/mdirshadengineer/agentflow/pull/16) [`19e476b`](https://github.com/mdirshadengineer/agentflow/commit/19e476b772515a9d7852c98a001ca57045345a8b) Thanks [@mdirshadengineer](https://github.com/mdirshadengineer)! - CLI application now includes UI Application
+
 ## 0.2.1
 
 ### Patch Changes
