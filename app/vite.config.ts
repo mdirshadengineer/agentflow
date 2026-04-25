@@ -5,19 +5,19 @@ import react from "@vitejs/plugin-react"
 import { defineConfig } from "vite"
 
 export default defineConfig({
-  plugins: [
-    tanstackRouter({
-      autoCodeSplitting: true,
-    }),
-    react(),
-    tailwindcss(),
-  ],
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
-    },
-  },
-  build: {
-    outDir: "dist",
-  },
+	plugins: [
+		tanstackRouter({
+			autoCodeSplitting: true,
+		}),
+		react(),
+		tailwindcss(),
+	],
+	resolve: {
+		alias: {
+			"@": path.resolve(__dirname, "./src"),
+		},
+	},
+	build: {
+		outDir: "dist",
+	},
 })

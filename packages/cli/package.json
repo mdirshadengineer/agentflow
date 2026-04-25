@@ -19,13 +19,7 @@
 	"engines": {
 		"node": ">=22.16"
 	},
-	"files": [
-		"dist",
-		"bin",
-		"README.md",
-		"CHANGELOG.md",
-		"package.json"
-	],
+	"files": ["dist", "bin", "README.md", "CHANGELOG.md", "package.json"],
 	"scripts": {
 		"start": "node ./bin/agentflow",
 		"dev": "tsx watch src/dev/main.ts",
