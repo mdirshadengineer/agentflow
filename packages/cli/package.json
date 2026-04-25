@@ -13,8 +13,12 @@
 	},
 	"author": {
 		"name": "mdirshadengineer",
-		"email": "mdirshadengineer@gmail.com",
+		"email": "mdirshadengineer+github@gmail.com",
 		"url": "https://mdirshad.vercel.app"
+	},
+	"repository": {
+		"directory": "packages/cli",
+		"type": "git"
 	},
 	"engines": {
 		"node": ">=22.16"

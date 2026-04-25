@@ -10,6 +10,10 @@
 		"email": "mdirshadengineer+github@gmail.com",
 		"url": "https://mdirshad.vercel.app"
 	},
+	"repository": {
+		"directory": "app",
+		"type": "git"
+	},
 	"engines": {
 		"node": ">=22.16"
 	},
