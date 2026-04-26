@@ -1,4 +1,6 @@
-import { Link } from "@tanstack/react-router"
+import { Link, useNavigate } from "@tanstack/react-router"
+import { useState } from "react"
+import { useAuth } from "@/app/auth-context"
 import { Button } from "@/components/ui/button"
 import {
 	Card,
@@ -20,6 +22,31 @@ export function SignupForm({
 	className,
 	...props
 }: React.ComponentProps<"div">) {
+	const { register } = useAuth()
+	const navigate = useNavigate()
+	const [email, setEmail] = useState("")
+	const [password, setPassword] = useState("")
+	const [error, setError] = useState<string | null>(null)
+	const [loading, setLoading] = useState(false)
+
+	const handleSubmit = async (e: React.FormEvent) => {
+		e.preventDefault()
+		setError(null)
+		if (password.length < 8) {
+			setError("Password must be at least 8 characters")
+			return
+		}
+		setLoading(true)
+		try {
+			await register(email, password)
+			await navigate({ to: "/dashboard" })
+		} catch (err) {
+			setError(err instanceof Error ? err.message : "Registration failed")
+		} finally {
+			setLoading(false)
+		}
+	}
+
 	return (
 		<div className={cn("flex flex-col gap-6", className)} {...props}>
 			<Card>
@@ -30,12 +57,13 @@ export function SignupForm({
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
-					<form>
+					<form onSubmit={handleSubmit}>
 						<FieldGroup>
-							<Field>
-								<FieldLabel htmlFor="name">Full Name</FieldLabel>
-								<Input id="name" type="text" placeholder="John Doe" required />
-							</Field>
+							{error && (
+								<p className="rounded bg-destructive/10 px-3 py-2 text-sm text-destructive">
+									{error}
+								</p>
+							)}
 							<Field>
 								<FieldLabel htmlFor="email">Email</FieldLabel>
 								<Input
@@ -43,48 +71,35 @@ export function SignupForm({
 									type="email"
 									placeholder="m@example.com"
 									required
+									value={email}
+									onChange={(e) => setEmail(e.target.value)}
 								/>
 							</Field>
 							<Field>
-								<Field className="grid grid-cols-2 gap-4">
-									<Field>
-										<FieldLabel htmlFor="password">Password</FieldLabel>
-										<Input id="password" type="password" required />
-									</Field>
-									<Field>
-										<FieldLabel htmlFor="confirm-password">
-											Confirm Password
-										</FieldLabel>
-										<Input id="confirm-password" type="password" required />
-									</Field>
-								</Field>
+								<FieldLabel htmlFor="password">Password</FieldLabel>
+								<Input
+									id="password"
+									type="password"
+									required
+									value={password}
+									onChange={(e) => setPassword(e.target.value)}
+								/>
 								<FieldDescription>
 									Must be at least 8 characters long.
 								</FieldDescription>
 							</Field>
 							<Field>
-								<Button type="submit">Create Account</Button>
+								<Button type="submit" disabled={loading}>
+									{loading ? "Creating account…" : "Create Account"}
+								</Button>
 								<FieldDescription className="text-center">
-									Already have an account?{" "}
-									<Link
-										to="/login"
-										search={{
-											redirect: "/profile",
-										}}
-									>
-										Sign in
-									</Link>
+									Already have an account? <Link to="/login">Sign in</Link>
 								</FieldDescription>
 							</Field>
 						</FieldGroup>
 					</form>
 				</CardContent>
 			</Card>
-			<FieldDescription className="px-6 text-center">
-				By clicking continue, you agree to our{" "}
-				<Link to="/">Terms of Service</Link> and{" "}
-				<Link to="/">Privacy Policy</Link>.
-			</FieldDescription>
 		</div>
 	)
 }

@@ -1,10 +1,16 @@
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import autoLoad from "@fastify/autoload";
+import fastifyCookie from "@fastify/cookie";
 import httpProxy from "@fastify/http-proxy";
+import fastifyJwt from "@fastify/jwt";
 import fastifyStatic from "@fastify/static";
 import { type FastifyReply, type FastifyRequest, fastify } from "fastify";
-import { AGENTFLOW_API_SERVER_PORT } from "../global.config.js";
+import { runMigrations } from "../db/migrate.js";
+import {
+	AGENTFLOW_API_SERVER_PORT,
+	AGENTFLOW_JWT_SECRET,
+} from "../global.config.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -13,6 +19,16 @@ const isDev = process.env.NODE_ENV !== "production";
 
 function createAPIServer() {
 	const app = fastify({ logger: true });
+
+	// Run DB migrations
+	runMigrations();
+
+	// Plugins
+	app.register(fastifyCookie);
+	app.register(fastifyJwt, {
+		secret: AGENTFLOW_JWT_SECRET,
+		cookie: { cookieName: "token", signed: false },
+	});
 
 	/**
 	 * 1. API Routes
@@ -31,21 +47,18 @@ function createAPIServer() {
 	 * 3. Frontend handling
 	 */
 	if (isDev) {
-		// ✅ DEV: Proxy everything except /api to Vite
 		app.register(httpProxy, {
 			upstream: "http://localhost:5173",
-			prefix: "/", // safe now (no static registered)
-			rewritePrefix: "/", // keep path intact
+			prefix: "/",
+			rewritePrefix: "/",
 		});
 	} else {
-		// ✅ PROD: Serve built UI
 		app.register(fastifyStatic, {
 			root: join(__dirname, "..", "ui"),
 			prefix: "/",
-			wildcard: false, // disable wildcard to allow SPA fallback
+			wildcard: false,
 		});
 
-		// SPA fallback
 		app.setNotFoundHandler(async (req: FastifyRequest, reply: FastifyReply) => {
 			if (req.url.startsWith("/api")) {
 				return reply.code(404).send({ error: "Not found" });
