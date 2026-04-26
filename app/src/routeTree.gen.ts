@@ -14,6 +14,11 @@ import { Route as SignupRouteImport } from './routes/signup'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedAgentsRouteImport } from './routes/_authenticated/agents'
+import { Route as AuthenticatedAgentsAgentIdRouteImport } from './routes/_authenticated/agents_.$agentId'
+import { Route as AuthenticatedWorkflowsRouteImport } from './routes/_authenticated/workflows'
+import { Route as AuthenticatedWorkflowsWorkflowIdRunsRouteImport } from './routes/_authenticated/workflows_.$workflowId.runs'
+import { Route as AuthenticatedRunsRunIdRouteImport } from './routes/_authenticated/runs_.$runId'
 
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
@@ -39,18 +44,53 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedAgentsRoute = AuthenticatedAgentsRouteImport.update({
+  id: '/agents',
+  path: '/agents',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedAgentsAgentIdRoute = AuthenticatedAgentsAgentIdRouteImport.update({
+  id: '/agents/$agentId',
+  path: '/agents/$agentId',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedWorkflowsRoute = AuthenticatedWorkflowsRouteImport.update({
+  id: '/workflows',
+  path: '/workflows',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedWorkflowsWorkflowIdRunsRoute = AuthenticatedWorkflowsWorkflowIdRunsRouteImport.update({
+  id: '/workflows/$workflowId/runs',
+  path: '/workflows/$workflowId/runs',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedRunsRunIdRoute = AuthenticatedRunsRunIdRouteImport.update({
+  id: '/runs/$runId',
+  path: '/runs/$runId',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/agents': typeof AuthenticatedAgentsRoute
+  '/agents/$agentId': typeof AuthenticatedAgentsAgentIdRoute
+  '/workflows': typeof AuthenticatedWorkflowsRoute
+  '/workflows/$workflowId/runs': typeof AuthenticatedWorkflowsWorkflowIdRunsRoute
+  '/runs/$runId': typeof AuthenticatedRunsRunIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/agents': typeof AuthenticatedAgentsRoute
+  '/agents/$agentId': typeof AuthenticatedAgentsAgentIdRoute
+  '/workflows': typeof AuthenticatedWorkflowsRoute
+  '/workflows/$workflowId/runs': typeof AuthenticatedWorkflowsWorkflowIdRunsRoute
+  '/runs/$runId': typeof AuthenticatedRunsRunIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -59,13 +99,47 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/_authenticated': typeof AuthenticatedRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/agents': typeof AuthenticatedAgentsRoute
+  '/_authenticated/agents/$agentId': typeof AuthenticatedAgentsAgentIdRoute
+  '/_authenticated/workflows': typeof AuthenticatedWorkflowsRoute
+  '/_authenticated/workflows/$workflowId/runs': typeof AuthenticatedWorkflowsWorkflowIdRunsRoute
+  '/_authenticated/runs/$runId': typeof AuthenticatedRunsRunIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/signup' | '/dashboard'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/signup'
+    | '/dashboard'
+    | '/agents'
+    | '/agents/$agentId'
+    | '/workflows'
+    | '/workflows/$workflowId/runs'
+    | '/runs/$runId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/signup' | '/dashboard'
-  id: '__root__' | '/' | '/login' | '/signup' | '/_authenticated' | '/_authenticated/dashboard'
+  to:
+    | '/'
+    | '/login'
+    | '/signup'
+    | '/dashboard'
+    | '/agents'
+    | '/agents/$agentId'
+    | '/workflows'
+    | '/workflows/$workflowId/runs'
+    | '/runs/$runId'
+  id:
+    | '__root__'
+    | '/'
+    | '/login'
+    | '/signup'
+    | '/_authenticated'
+    | '/_authenticated/dashboard'
+    | '/_authenticated/agents'
+    | '/_authenticated/agents/$agentId'
+    | '/_authenticated/workflows'
+    | '/_authenticated/workflows/$workflowId/runs'
+    | '/_authenticated/runs/$runId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -77,6 +151,11 @@ export interface RootRouteChildren {
 
 export interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedAgentsRoute: typeof AuthenticatedAgentsRoute
+  AuthenticatedAgentsAgentIdRoute: typeof AuthenticatedAgentsAgentIdRoute
+  AuthenticatedWorkflowsRoute: typeof AuthenticatedWorkflowsRoute
+  AuthenticatedWorkflowsWorkflowIdRunsRoute: typeof AuthenticatedWorkflowsWorkflowIdRunsRoute
+  AuthenticatedRunsRunIdRoute: typeof AuthenticatedRunsRunIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -116,11 +195,51 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteImport
     }
+    '/_authenticated/agents': {
+      id: '/_authenticated/agents'
+      path: '/agents'
+      fullPath: '/agents'
+      preLoaderRoute: typeof AuthenticatedAgentsRouteImport
+      parentRoute: typeof AuthenticatedRouteImport
+    }
+    '/_authenticated/agents/$agentId': {
+      id: '/_authenticated/agents/$agentId'
+      path: '/agents/$agentId'
+      fullPath: '/agents/$agentId'
+      preLoaderRoute: typeof AuthenticatedAgentsAgentIdRouteImport
+      parentRoute: typeof AuthenticatedRouteImport
+    }
+    '/_authenticated/workflows': {
+      id: '/_authenticated/workflows'
+      path: '/workflows'
+      fullPath: '/workflows'
+      preLoaderRoute: typeof AuthenticatedWorkflowsRouteImport
+      parentRoute: typeof AuthenticatedRouteImport
+    }
+    '/_authenticated/workflows/$workflowId/runs': {
+      id: '/_authenticated/workflows/$workflowId/runs'
+      path: '/workflows/$workflowId/runs'
+      fullPath: '/workflows/$workflowId/runs'
+      preLoaderRoute: typeof AuthenticatedWorkflowsWorkflowIdRunsRouteImport
+      parentRoute: typeof AuthenticatedRouteImport
+    }
+    '/_authenticated/runs/$runId': {
+      id: '/_authenticated/runs/$runId'
+      path: '/runs/$runId'
+      fullPath: '/runs/$runId'
+      preLoaderRoute: typeof AuthenticatedRunsRunIdRouteImport
+      parentRoute: typeof AuthenticatedRouteImport
+    }
   }
 }
 
 const authenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedAgentsRoute: AuthenticatedAgentsRoute,
+  AuthenticatedAgentsAgentIdRoute: AuthenticatedAgentsAgentIdRoute,
+  AuthenticatedWorkflowsRoute: AuthenticatedWorkflowsRoute,
+  AuthenticatedWorkflowsWorkflowIdRunsRoute: AuthenticatedWorkflowsWorkflowIdRunsRoute,
+  AuthenticatedRunsRunIdRoute: AuthenticatedRunsRunIdRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(authenticatedRouteChildren)
