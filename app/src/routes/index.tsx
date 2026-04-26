@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, Link } from "@tanstack/react-router"
 import { useState } from "react"
 import {
 	MobileNav,
@@ -44,8 +44,12 @@ function RootComponent() {
 					<NavbarLogo />
 					<NavItems items={navItems} />
 					<div className="flex items-center gap-4">
-						<NavbarButton variant="secondary">Login</NavbarButton>
-						<NavbarButton variant="primary">Book a call</NavbarButton>
+						<Link to="/login">
+							<NavbarButton variant="secondary">Login</NavbarButton>
+						</Link>
+						<Link to="/workflows">
+							<NavbarButton variant="primary">Get Started</NavbarButton>
+						</Link>
 					</div>
 				</NavBody>
 
@@ -109,12 +113,18 @@ function RootComponent() {
 						AgentFlow <br /> Automate. Innvovate. Collaborate.
 					</h1>
 					<div className="relative z-20 flex flex-wrap items-center justify-center gap-4 pt-4">
-						<button className="rounded-md bg-sky-600 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-sky-700 focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 focus:ring-offset-black focus:outline-none">
-							Join the club
-						</button>
-						<button className="rounded-md border border-white/20 bg-white/10 px-6 py-2.5 text-sm font-medium text-white backdrop-blur-sm transition-colors hover:bg-white/20 focus:ring-2 focus:ring-white/20 focus:ring-offset-2 focus:ring-offset-black focus:outline-none">
-							Read more
-						</button>
+						<Link
+							to="/workflows"
+							className="rounded-md bg-sky-600 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-sky-700 focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 focus:ring-offset-black focus:outline-none"
+						>
+							Build a Workflow
+						</Link>
+						<Link
+							to="/login"
+							className="rounded-md border border-white/20 bg-white/10 px-6 py-2.5 text-sm font-medium text-white backdrop-blur-sm transition-colors hover:bg-white/20 focus:ring-2 focus:ring-white/20 focus:ring-offset-2 focus:ring-offset-black focus:outline-none"
+						>
+							Sign In
+						</Link>
 					</div>
 				</div>
 			</div>
