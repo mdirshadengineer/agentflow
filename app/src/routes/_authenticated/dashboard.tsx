@@ -54,19 +54,33 @@ function Dashboard() {
 	const [workflows, setWorkflows] = useState<Workflow[]>([])
 	const [runs, setRuns] = useState<Run[]>([])
 	const [loading, setLoading] = useState(true)
+	const [error, setError] = useState<string | null>(null)
 
 	useEffect(() => {
 		Promise.all([
-			fetch("/api/v1/agents").then((r) => r.json() as Promise<Agent[]>),
-			fetch("/api/v1/workflows").then((r) => r.json() as Promise<Workflow[]>),
-			fetch("/api/v1/runs").then((r) => r.json() as Promise<Run[]>),
+			fetch("/api/v1/agents").then((r) => {
+				if (!r.ok) throw new Error("Failed to fetch agents")
+				return r.json() as Promise<Agent[]>
+			}),
+			fetch("/api/v1/workflows").then((r) => {
+				if (!r.ok) throw new Error("Failed to fetch workflows")
+				return r.json() as Promise<Workflow[]>
+			}),
+			fetch("/api/v1/runs").then((r) => {
+				if (!r.ok) throw new Error("Failed to fetch runs")
+				return r.json() as Promise<Run[]>
+			}),
 		])
 			.then(([a, w, r]) => {
 				setAgents(a)
 				setWorkflows(w)
 				setRuns(r)
 			})
-			.catch(() => {})
+			.catch((err: unknown) => {
+				setError(
+					err instanceof Error ? err.message : "Failed to load dashboard data"
+				)
+			})
 			.finally(() => setLoading(false))
 	}, [])
 
@@ -81,6 +95,12 @@ function Dashboard() {
 					Overview of your agents and workflows.
 				</p>
 			</div>
+
+			{error && (
+				<p className="rounded bg-destructive/10 px-3 py-2 text-sm text-destructive">
+					{error}
+				</p>
+			)}
 
 			{/* Stats row */}
 			<div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
