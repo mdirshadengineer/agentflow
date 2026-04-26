@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router"
-import { PlayIcon, PlusIcon, Trash2Icon } from "lucide-react"
-import { useEffect, useState } from "react"
+import { EditIcon, PlayIcon, PlusIcon, Trash2Icon } from "lucide-react"
+import { useState } from "react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -15,74 +15,23 @@ import {
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Textarea } from "@/components/ui/textarea"
+import { useWorkflows } from "@/hooks/use-workflow"
+import type { Workflow } from "@/lib/api/workflows"
 
 export const Route = createFileRoute("/_authenticated/workflows")({
 	component: WorkflowsPage,
 })
 
-interface Workflow {
-	id: string
-	name: string
-	definition: unknown
-	createdAt: number
-	updatedAt: number
-}
-
-async function fetchWorkflows(): Promise<Workflow[]> {
-	const r = await fetch("/api/v1/workflows")
-	if (!r.ok) throw new Error("Failed to fetch workflows")
-	return r.json() as Promise<Workflow[]>
-}
-
-async function deleteWorkflow(id: string): Promise<void> {
-	const r = await fetch(`/api/v1/workflows/${id}`, { method: "DELETE" })
-	if (!r.ok) throw new Error("Failed to delete workflow")
-}
-
-async function runWorkflow(id: string): Promise<{ id: string }> {
-	const r = await fetch(`/api/v1/workflows/${id}/run`, { method: "POST" })
-	if (!r.ok) throw new Error("Failed to trigger run")
-	return r.json() as Promise<{ id: string }>
-}
-
 function WorkflowsPage() {
-	const [workflows, setWorkflows] = useState<Workflow[]>([])
-	const [loading, setLoading] = useState(true)
+	const { workflows, loading, handleCreate, handleDelete, handleRun } =
+		useWorkflows()
 	const [createOpen, setCreateOpen] = useState(false)
 	const [runningId, setRunningId] = useState<string | null>(null)
 
-	const reload = () => {
-		setLoading(true)
-		fetchWorkflows()
-			.then(setWorkflows)
-			.catch(() => toast.error("Failed to load workflows"))
-			.finally(() => setLoading(false))
-	}
-
-	useEffect(reload, [])
-
-	const handleDelete = async (id: string, name: string) => {
-		if (!confirm(`Delete workflow "${name}"?`)) return
-		try {
-			await deleteWorkflow(id)
-			toast.success("Workflow deleted")
-			reload()
-		} catch {
-			toast.error("Failed to delete workflow")
-		}
-	}
-
-	const handleRun = async (id: string) => {
+	const onRun = async (id: string) => {
 		setRunningId(id)
-		try {
-			const run = await runWorkflow(id)
-			toast.success(`Run started: ${run.id.slice(0, 8)}`)
-		} catch {
-			toast.error("Failed to start run")
-		} finally {
-			setRunningId(null)
-		}
+		await handleRun(id)
+		setRunningId(null)
 	}
 
 	return (
@@ -103,9 +52,9 @@ function WorkflowsPage() {
 					</DialogTrigger>
 					<DialogContent>
 						<CreateWorkflowForm
-							onSuccess={() => {
-								setCreateOpen(false)
-								reload()
+							onCreate={async (name, description) => {
+								const wf = await handleCreate(name, description)
+								if (wf) setCreateOpen(false)
 							}}
 						/>
 					</DialogContent>
@@ -127,49 +76,13 @@ function WorkflowsPage() {
 			) : (
 				<div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
 					{workflows.map((wf) => (
-						<Card key={wf.id} className="group">
-							<CardHeader className="border-b pb-3">
-								<div className="flex items-start justify-between gap-2">
-									<CardTitle className="text-sm font-medium leading-snug">
-										<Link
-											to="/workflows/$workflowId/runs"
-											params={{ workflowId: wf.id }}
-											className="hover:underline"
-										>
-											{wf.name}
-										</Link>
-									</CardTitle>
-									<Button
-										variant="ghost"
-										size="icon-xs"
-										className="opacity-0 group-hover:opacity-100 transition-opacity"
-										onClick={() => void handleDelete(wf.id, wf.name)}
-									>
-										<Trash2Icon />
-										<span className="sr-only">Delete</span>
-									</Button>
-								</div>
-							</CardHeader>
-							<CardContent className="pt-3 flex items-center justify-between gap-2">
-								<Link
-									to="/workflows/$workflowId/runs"
-									params={{ workflowId: wf.id }}
-									className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-								>
-									View run history →
-								</Link>
-								<Button
-									size="icon-xs"
-									variant="outline"
-									disabled={runningId === wf.id}
-									onClick={() => void handleRun(wf.id)}
-									title="Trigger run"
-								>
-									<PlayIcon />
-									<span className="sr-only">Run</span>
-								</Button>
-							</CardContent>
-						</Card>
+						<WorkflowCard
+							key={wf.id}
+							workflow={wf}
+							runningId={runningId}
+							onRun={() => void onRun(wf.id)}
+							onDelete={() => void handleDelete(wf.id, wf.name)}
+						/>
 					))}
 				</div>
 			)}
@@ -177,55 +90,105 @@ function WorkflowsPage() {
 	)
 }
 
-function CreateWorkflowForm({ onSuccess }: { onSuccess: () => void }) {
-	const [name, setName] = useState("")
-	const [definitionText, setDefinitionText] = useState(
-		JSON.stringify(
-			{
-				steps: [{ name: "step-1", type: "noop" }],
-				triggers: [],
-			},
-			null,
-			2
-		)
+function WorkflowCard({
+	workflow: wf,
+	runningId,
+	onRun,
+	onDelete,
+}: {
+	workflow: Workflow
+	runningId: string | null
+	onRun: () => void
+	onDelete: () => void
+}) {
+	return (
+		<Card className="group">
+			<CardHeader className="border-b pb-3">
+				<div className="flex items-start justify-between gap-2">
+					<CardTitle className="text-sm font-medium leading-snug">
+						<Link
+							to="/workflows/$workflowId/runs"
+							params={{ workflowId: wf.id }}
+							className="hover:underline"
+						>
+							{wf.name}
+						</Link>
+					</CardTitle>
+					<Button
+						variant="ghost"
+						size="icon-xs"
+						className="opacity-0 group-hover:opacity-100 transition-opacity"
+						onClick={onDelete}
+					>
+						<Trash2Icon />
+						<span className="sr-only">Delete</span>
+					</Button>
+				</div>
+				{wf.description && (
+					<p className="text-[11px] text-muted-foreground line-clamp-1 mt-0.5">
+						{wf.description}
+					</p>
+				)}
+			</CardHeader>
+			<CardContent className="pt-3 flex items-center justify-between gap-2">
+				<div className="flex items-center gap-2">
+					<Link
+						to="/workflows/$workflowId/runs"
+						params={{ workflowId: wf.id }}
+						className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+					>
+						Runs →
+					</Link>
+					<Link
+						to="/workflows/$workflowId/edit"
+						params={{ workflowId: wf.id }}
+						className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+					>
+						<EditIcon className="size-3" />
+						Edit
+					</Link>
+				</div>
+				<Button
+					size="icon-xs"
+					variant="outline"
+					disabled={runningId === wf.id}
+					onClick={onRun}
+					title="Trigger run"
+				>
+					<PlayIcon />
+					<span className="sr-only">Run</span>
+				</Button>
+			</CardContent>
+		</Card>
 	)
+}
+
+function CreateWorkflowForm({
+	onCreate,
+}: {
+	onCreate: (name: string, description?: string) => Promise<void>
+}) {
+	const [name, setName] = useState("")
+	const [description, setDescription] = useState("")
 	const [loading, setLoading] = useState(false)
 	const [error, setError] = useState<string | null>(null)
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
 		setError(null)
-
-		let definition: unknown
-		try {
-			definition = JSON.parse(definitionText)
-		} catch {
-			setError("Definition must be valid JSON")
-			return
-		}
-
 		setLoading(true)
 		try {
-			const r = await fetch("/api/v1/workflows", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ name, definition }),
-			})
-			if (!r.ok) {
-				const body = (await r.json()) as { error: string }
-				throw new Error(body.error)
-			}
-			toast.success("Workflow created")
-			onSuccess()
+			await onCreate(name, description || undefined)
 		} catch (err) {
 			setError(err instanceof Error ? err.message : "Failed to create workflow")
+			toast.error("Failed to create workflow")
 		} finally {
 			setLoading(false)
 		}
 	}
 
 	return (
-		<form onSubmit={handleSubmit}>
+		<form onSubmit={(e) => void handleSubmit(e)}>
 			<DialogHeader>
 				<DialogTitle>Create Workflow</DialogTitle>
 			</DialogHeader>
@@ -246,13 +209,12 @@ function CreateWorkflowForm({ onSuccess }: { onSuccess: () => void }) {
 					/>
 				</Field>
 				<Field>
-					<FieldLabel htmlFor="wf-def">Definition (JSON)</FieldLabel>
-					<Textarea
-						id="wf-def"
-						rows={10}
-						value={definitionText}
-						onChange={(e) => setDefinitionText(e.target.value)}
-						className="font-mono text-xs"
+					<FieldLabel htmlFor="wf-desc">Description</FieldLabel>
+					<Input
+						id="wf-desc"
+						value={description}
+						onChange={(e) => setDescription(e.target.value)}
+						placeholder="Optional description"
 					/>
 				</Field>
 			</FieldGroup>
