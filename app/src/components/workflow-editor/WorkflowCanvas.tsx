@@ -2,6 +2,7 @@ import {
 	Background,
 	BackgroundVariant,
 	Controls,
+	type Edge,
 	MiniMap,
 	type Node,
 	ReactFlow,
@@ -18,6 +19,7 @@ import {
 } from "@/components/ui/resizable"
 import type { WorkflowNodeType } from "@/hooks/use-workflow"
 import { useWorkflow } from "@/hooks/use-workflow"
+import { EdgeContextMenu } from "./EdgeContextMenu"
 import { InspectorPanel } from "./InspectorPanel"
 import { NodePanel } from "./NodePanel"
 import { ActionNode } from "./nodes/ActionNode"
@@ -63,6 +65,11 @@ function Canvas({ workflowId }: { workflowId?: string }) {
 
 	const [showMiniMap, setShowMiniMap] = useState(true)
 	const [selectedNode, setSelectedNode] = useState<Node | null>(null)
+	const [edgeMenu, setEdgeMenu] = useState<{
+		edgeId: string
+		x: number
+		y: number
+	} | null>(null)
 	const reactFlowWrapper = useRef<HTMLDivElement>(null)
 
 	// Load workflow if id provided
@@ -129,6 +136,41 @@ function Canvas({ workflowId }: { workflowId?: string }) {
 		[setNodes]
 	)
 
+	// -----------------------------------------------------------------------
+	// Edge context menu
+	// -----------------------------------------------------------------------
+
+	const onEdgeContextMenu = useCallback((e: React.MouseEvent, edge: Edge) => {
+		e.preventDefault()
+		setEdgeMenu({ edgeId: edge.id, x: e.clientX, y: e.clientY })
+	}, [])
+
+	const onDeleteEdge = useCallback(
+		(id: string) => {
+			setEdges((eds) => eds.filter((e) => e.id !== id))
+		},
+		[setEdges]
+	)
+
+	const onAddConditionToEdge = useCallback(
+		(id: string) => {
+			const edge = edges.find((e) => e.id === id)
+			if (!edge) return
+			const sourceNode = nodes.find((n) => n.id === edge.source)
+			const targetNode = nodes.find((n) => n.id === edge.target)
+			const midX =
+				sourceNode && targetNode
+					? (sourceNode.position.x + targetNode.position.x) / 2
+					: 200
+			const midY =
+				sourceNode && targetNode
+					? (sourceNode.position.y + targetNode.position.y) / 2
+					: 200
+			addNode("condition", { x: midX, y: midY })
+		},
+		[edges, nodes, addNode]
+	)
+
 	return (
 		<div className="flex h-full flex-col bg-neutral-950">
 			<WorkflowToolbar
@@ -167,6 +209,7 @@ function Canvas({ workflowId }: { workflowId?: string }) {
 							onConnect={onConnect}
 							onNodeClick={onNodeClick}
 							onPaneClick={onPaneClick}
+							onEdgeContextMenu={onEdgeContextMenu}
 							fitView
 							deleteKeyCode="Delete"
 							className="workflow-canvas"
@@ -202,6 +245,17 @@ function Canvas({ workflowId }: { workflowId?: string }) {
 					/>
 				</ResizablePanel>
 			</ResizablePanelGroup>
+
+			{edgeMenu && (
+				<EdgeContextMenu
+					x={edgeMenu.x}
+					y={edgeMenu.y}
+					edgeId={edgeMenu.edgeId}
+					onDelete={onDeleteEdge}
+					onAddCondition={onAddConditionToEdge}
+					onClose={() => setEdgeMenu(null)}
+				/>
+			)}
 		</div>
 	)
 }

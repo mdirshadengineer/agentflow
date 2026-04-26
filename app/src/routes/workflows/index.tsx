@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router"
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router"
 import { formatDistanceToNow } from "date-fns"
 import { ArrowRight, Calendar, Plus, Workflow } from "lucide-react"
 import { useEffect, useState } from "react"
@@ -17,6 +17,7 @@ export const Route = createFileRoute("/workflows/")({
 })
 
 function WorkflowsPage() {
+	const navigate = useNavigate()
 	const [workflows, setWorkflows] = useState<WorkflowRecord[]>([])
 	const [isLoading, setIsLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
@@ -40,8 +41,10 @@ function WorkflowsPage() {
 			})
 			if (!res.ok) throw new Error("Failed to create workflow")
 			const data: WorkflowRecord = await res.json()
-			// navigate to the editor
-			window.location.href = `/workflows/${data.id}`
+			navigate({
+				to: "/workflows/$workflowId",
+				params: { workflowId: data.id },
+			})
 		} catch (e) {
 			setError(e instanceof Error ? e.message : "Unknown error")
 		} finally {
