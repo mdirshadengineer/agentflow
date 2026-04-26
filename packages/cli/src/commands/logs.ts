@@ -131,11 +131,7 @@ class Logs extends CommandLifecycle<LogsCommandFlags> {
 				}
 			}
 		}, 1000);
-
-		// Keep the process alive
-		await new Promise<void>(() => {
-			// Resolved only by the SIGINT handler above.
-		});
+		// setInterval keeps the event loop alive; SIGINT handler calls process.exit(0).
 	}
 }
 
