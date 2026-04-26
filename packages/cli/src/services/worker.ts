@@ -63,9 +63,7 @@ async function executeDAG(
 	const failed = new Set<string>();
 
 	// Map for quick lookup
-	const stepMap = new Map<string, WorkflowStep>(
-		steps.map((s) => [s.name, s]),
-	);
+	const stepMap = new Map<string, WorkflowStep>(steps.map((s) => [s.name, s]));
 
 	// Create a DB record for each step so they are visible immediately
 	for (const step of steps) {
@@ -295,4 +293,4 @@ function createWorker() {
 	};
 }
 
-export { createWorker };
+export { createWorker, executeStep };

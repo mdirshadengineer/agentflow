@@ -6,6 +6,7 @@
 		"dev": "turbo run dev",
 		"test": "turbo run test",
 		"lint": "turbo run lint",
+		"typecheck": "turbo run typecheck",
 		"build": "turbo run build",
 		"clean": "turbo run clean",
 		"format": "turbo run format",
