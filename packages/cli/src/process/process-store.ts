@@ -13,7 +13,11 @@ import type { ProcessRecord } from "./process-types.js";
 const PROCESS_FILE = join(homedir(), ".agentflow", "processes.json");
 
 export class ProcessStore {
-	private file = PROCESS_FILE;
+	private file: string;
+
+	constructor(file = PROCESS_FILE) {
+		this.file = file;
+	}
 
 	private ensureDir() {
 		const dir = dirname(this.file);

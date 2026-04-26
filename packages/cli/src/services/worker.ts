@@ -295,4 +295,4 @@ function createWorker() {
 	};
 }
 
-export { createWorker };
+export { createWorker, executeStep };

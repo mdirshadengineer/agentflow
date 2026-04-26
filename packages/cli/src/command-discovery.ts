@@ -26,14 +26,33 @@ class CommandDiscovery {
 			return 0;
 		}
 
-		const definition = getCommandDefinition(this.commandName);
+		// Support compound commands: "agentflow <group> <subcommand> [flags…]"
+		// e.g. "agentflow agent list", "agentflow config set"
+		// If the token after the group name looks like a subcommand (no leading
+		// dash) and a compound key is registered in the catalog, use it and
+		// advance the args slice one position further.
+		const nextArg = process.argv[3];
+		let resolvedName = this.commandName;
+		let argsSliceStart = 3; // default: skip node, script, command
+
+		if (nextArg && !nextArg.startsWith("-")) {
+			const compound = `${this.commandName} ${nextArg}`;
+			if (getCommandDefinition(compound)) {
+				resolvedName = compound;
+				argsSliceStart = 4; // also skip the subcommand token
+			}
+		}
+
+		const definition = getCommandDefinition(resolvedName);
 		if (!definition) {
-			console.error(`Command "${this.commandName}" not found.`);
+			console.error(`Command "${resolvedName}" not found.`);
 			printGlobalHelp(getCommandDefinitions());
 			return 1;
 		}
 
-		const commandContext = parseCommandContext(process.argv.slice(3)); // slice(3) skips node, script, and command name
+		const commandContext = parseCommandContext(
+			process.argv.slice(argsSliceStart),
+		);
 		return this.executeCommand(definition, commandContext);
 	}
 
