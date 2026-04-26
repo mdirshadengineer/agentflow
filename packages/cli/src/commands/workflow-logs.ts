@@ -96,7 +96,9 @@ class WorkflowLogs extends CommandLifecycle<WorkflowLogsFlags> {
 		}
 
 		if (!run) {
-			console.log(`No runs found for workflow: ${workflow.name} (${workflowId})`);
+			console.log(
+				`No runs found for workflow: ${workflow.name} (${workflowId})`,
+			);
 			return;
 		}
 
@@ -118,9 +120,7 @@ class WorkflowLogs extends CommandLifecycle<WorkflowLogsFlags> {
 		}
 
 		for (const step of steps) {
-			const ts = step.startedAt
-				? new Date(step.startedAt).toISOString()
-				: "—";
+			const ts = step.startedAt ? new Date(step.startedAt).toISOString() : "—";
 			const badge = step.status.padEnd(7);
 			const logs = step.logs ? `\n    ${step.logs}` : "";
 			console.log(`  [${ts}] [${badge}] ${step.stepName}${logs}`);

@@ -6,7 +6,12 @@ import {
 	type CommandDefinition,
 	type CommandMetadata,
 } from "../command-metadata.js";
-import { getDb, runMigrations, workflowRunSteps, workflowRuns } from "../db/index.js";
+import {
+	getDb,
+	runMigrations,
+	workflowRunSteps,
+	workflowRuns,
+} from "../db/index.js";
 
 // -----------------------------
 // Flags
@@ -76,7 +81,9 @@ function printStep(step: StepRow): void {
 	const ts = step.startedAt ? new Date(step.startedAt).toISOString() : "—";
 	const badge = step.status.padEnd(7);
 	const logLine = step.logs ? `  ${step.logs}` : "";
-	console.log(`[${ts}] [${badge}] run:${step.runId.slice(0, 8)}  ${step.stepName}${logLine}`);
+	console.log(
+		`[${ts}] [${badge}] run:${step.runId.slice(0, 8)}  ${step.stepName}${logLine}`,
+	);
 }
 
 // -----------------------------

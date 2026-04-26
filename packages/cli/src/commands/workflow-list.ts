@@ -40,7 +40,11 @@ class WorkflowList extends CommandLifecycle<WorkflowListFlags> {
 		runMigrations();
 		const db = getDb();
 		const rows = db
-			.select({ id: workflows.id, name: workflows.name, updatedAt: workflows.updatedAt })
+			.select({
+				id: workflows.id,
+				name: workflows.name,
+				updatedAt: workflows.updatedAt,
+			})
 			.from(workflows)
 			.all();
 
@@ -58,9 +62,7 @@ class WorkflowList extends CommandLifecycle<WorkflowListFlags> {
 		for (const wf of rows) {
 			console.log(`• ${wf.id}`);
 			console.log(`  Name:    ${wf.name}`);
-			console.log(
-				`  Updated: ${new Date(wf.updatedAt).toLocaleString()}\n`,
-			);
+			console.log(`  Updated: ${new Date(wf.updatedAt).toLocaleString()}\n`);
 		}
 	}
 }

@@ -57,9 +57,7 @@ class AgentList extends CommandLifecycle<AgentListFlags> {
 			console.log(`  Name:    ${agent.name}`);
 			console.log(`  Type:    ${agent.type}`);
 			if (agent.description) console.log(`  Desc:    ${agent.description}`);
-			console.log(
-				`  Created: ${new Date(agent.createdAt).toLocaleString()}\n`,
-			);
+			console.log(`  Created: ${new Date(agent.createdAt).toLocaleString()}\n`);
 		}
 	}
 }

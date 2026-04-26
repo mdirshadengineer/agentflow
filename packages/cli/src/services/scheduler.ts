@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto";
 import cron from "node-cron";
-import { eq } from "drizzle-orm";
 import { getDb, workflowRuns, workflows } from "../db/index.js";
 import type { WorkflowDefinition } from "./worker.js";
 

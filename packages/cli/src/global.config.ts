@@ -38,13 +38,13 @@ const _fileConfig = loadConfigFile();
 
 export const AGENTFLOW_DATA_DIR =
 	process.env.AGENTFLOW_DATA_DIR ??
-	_fileConfig["dataDir"] ??
+	_fileConfig.dataDir ??
 	join(homedir(), ".agentflow");
 
 export const AGENTFLOW_DEFAULT_COMMAND = "start";
 
 export const AGENTFLOW_API_SERVER_PORT = Number(
-	process.env.AGENTFLOW_PORT ?? _fileConfig["port"] ?? "3000",
+	process.env.AGENTFLOW_PORT ?? _fileConfig.port ?? "3000",
 );
 
 const _jwtEnv = process.env.AGENTFLOW_JWT_SECRET;

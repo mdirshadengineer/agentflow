@@ -21,6 +21,8 @@
 		"dev": "vite",
 		"ui-build": "tsc -b && vite build",
 		"preview": "vite preview",
+		"test": "vitest run",
+		"test:watch": "vitest",
 		"lint": "biome check",
 		"format": "biome format --write",
 		"typecheck": "tsc --noEmit",
@@ -61,6 +63,7 @@
 		"@types/react-dom": "^19.2.3",
 		"@vitejs/plugin-react": "^5.2.0",
 		"typescript": "~5.9.3",
-		"vite": "^7.3.1"
+		"vite": "^7.3.1",
+		"vitest": "3.2.4"
 	}
 }

@@ -90,7 +90,9 @@ class WorkflowRun extends CommandLifecycle<WorkflowRunFlags> {
 		console.log(`✓ Run enqueued: ${run.id}`);
 		console.log(`  Workflow: ${workflow.name} (${workflowId})`);
 		console.log(`  Status:   ${run.status}`);
-		console.log("\nThe run will be picked up by the worker when the server is running.");
+		console.log(
+			"\nThe run will be picked up by the worker when the server is running.",
+		);
 	}
 }
 

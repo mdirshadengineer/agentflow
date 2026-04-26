@@ -77,12 +77,12 @@ class Config extends CommandLifecycle<ConfigCommandFlags> {
 			port: {
 				value: AGENTFLOW_API_SERVER_PORT,
 				envVar: "AGENTFLOW_PORT",
-				source: resolveSource("AGENTFLOW_PORT", fileConfig["port"]),
+				source: resolveSource("AGENTFLOW_PORT", fileConfig.port),
 			},
 			dataDir: {
 				value: AGENTFLOW_DATA_DIR,
 				envVar: "AGENTFLOW_DATA_DIR",
-				source: resolveSource("AGENTFLOW_DATA_DIR", fileConfig["dataDir"]),
+				source: resolveSource("AGENTFLOW_DATA_DIR", fileConfig.dataDir),
 			},
 			configFile: {
 				value: CONFIG_FILE_PATH,
@@ -117,7 +117,9 @@ class Config extends CommandLifecycle<ConfigCommandFlags> {
 		);
 		console.log(`  configFile  ${config.configFile.value}  ${src("fixed")}`);
 		console.log();
-		console.log("Override at runtime:  AGENTFLOW_PORT=<n>  AGENTFLOW_DATA_DIR=<path>");
+		console.log(
+			"Override at runtime:  AGENTFLOW_PORT=<n>  AGENTFLOW_DATA_DIR=<path>",
+		);
 		console.log("Persist a value:      agentflow config set port <n>");
 		console.log("                      agentflow config set dataDir <path>\n");
 	}
