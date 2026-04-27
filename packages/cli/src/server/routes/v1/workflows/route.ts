@@ -9,6 +9,9 @@ import {
 } from "../../../../db/index.js";
 import { requireAuth } from "../../../middleware/auth.js";
 
+/** Polling interval for SSE log streams, in milliseconds. */
+const SSE_POLL_INTERVAL_MS = 500;
+
 type JWTPayload = { userId: string; email: string };
 
 function parseJson(raw: string | null | undefined): unknown {
@@ -393,7 +396,7 @@ export default async function workflowsRoutes(fastify: FastifyInstance) {
 						raw.end();
 						resolve();
 					}
-				}, 500);
+				}, SSE_POLL_INTERVAL_MS);
 			});
 		},
 	);

@@ -353,7 +353,9 @@ export default async function agentsRoutes(fastify: FastifyInstance) {
 
 		try {
 			// Run the agent loop
-			for (let i = 0; i < MAX_AGENT_LOOP_ITERATIONS; i++) {
+			let iteration = 0;
+			while (iteration < MAX_AGENT_LOOP_ITERATIONS) {
+				iteration += 1;
 				const response = await llmProvider.chatWithTools(
 					messages,
 					resolvedTools,
