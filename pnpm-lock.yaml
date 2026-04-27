@@ -236,6 +236,25 @@ importers:
         specifier: 3.2.4
         version: 3.2.4(@types/node@25.6.0)(jiti@2.6.1)(lightningcss@1.32.0)(msw@2.13.5(@types/node@25.6.0)(typescript@6.0.3))(tsx@4.21.0)
 
+  packages/nodes:
+    dependencies:
+      '@mdirshadengineer/agentflow-core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@types/node':
+        specifier: 25.6.0
+        version: 25.6.0
+      tsx:
+        specifier: 4.21.0
+        version: 4.21.0
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: 3.2.4
+        version: 3.2.4(@types/node@25.6.0)(jiti@2.6.1)(lightningcss@1.32.0)(msw@2.13.5(@types/node@25.6.0)(typescript@6.0.3))(tsx@4.21.0)
+
 packages:
 
   '@ark/schema@0.56.0':

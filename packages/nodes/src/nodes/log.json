@@ -1,0 +1,24 @@
+{
+	"type": "log",
+	"label": "Log",
+	"description": "Emits a message to the step log and passes it through as output.",
+	"configSchema": {
+		"type": "object",
+		"properties": {
+			"message": {
+				"type": "string",
+				"description": "The message to log."
+			}
+		},
+		"required": ["message"]
+	},
+	"outputSchema": {
+		"type": "object",
+		"properties": {
+			"message": {
+				"type": "string",
+				"description": "The logged message."
+			}
+		}
+	}
+}
