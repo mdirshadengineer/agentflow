@@ -280,6 +280,124 @@ export default async function workflowsRoutes(fastify: FastifyInstance) {
 		},
 	);
 
+	// GET /api/v1/workflows/:id/runs/:runId/logs — SSE stream of run log events
+	fastify.get<{ Params: { id: string; runId: string } }>(
+		"/:id/runs/:runId/logs",
+		{ preHandler: requireAuth },
+		async (request, reply) => {
+			const { userId } = request.user as JWTPayload;
+			const { id, runId } = request.params;
+			const db = getDb();
+
+			const workflow = db
+				.select()
+				.from(workflows)
+				.where(and(eq(workflows.id, id), eq(workflows.ownerId, userId)))
+				.get();
+
+			if (!workflow) {
+				return reply.code(404).send({ error: "Workflow not found" });
+			}
+
+			const run = db
+				.select()
+				.from(workflowRuns)
+				.where(and(eq(workflowRuns.id, runId), eq(workflowRuns.workflowId, id)))
+				.get();
+
+			if (!run) {
+				return reply.code(404).send({ error: "Run not found" });
+			}
+
+			// Take over the raw HTTP connection for SSE
+			reply.hijack();
+			const raw = reply.raw;
+
+			raw.writeHead(200, {
+				"Content-Type": "text/event-stream",
+				"Cache-Control": "no-cache",
+				Connection: "keep-alive",
+				"X-Accel-Buffering": "no",
+			});
+
+			const send = (event: string, data: unknown) => {
+				if (!raw.writableEnded) {
+					raw.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+				}
+			};
+
+			// Send snapshot of current steps
+			const initialSteps = db
+				.select()
+				.from(workflowRunSteps)
+				.where(eq(workflowRunSteps.runId, runId))
+				.all();
+			send("snapshot", { run: serializeRun(run), steps: initialSteps });
+
+			// If already terminal, close immediately
+			if (run.status === "success" || run.status === "failed") {
+				send("done", { status: run.status });
+				raw.end();
+				return;
+			}
+
+			let timer: ReturnType<typeof setInterval> | undefined;
+
+			const cleanup = () => {
+				if (timer !== undefined) {
+					clearInterval(timer);
+					timer = undefined;
+				}
+			};
+
+			await new Promise<void>((resolve) => {
+				request.raw.on("close", () => {
+					cleanup();
+					resolve();
+				});
+
+				timer = setInterval(() => {
+					if (raw.writableEnded) {
+						cleanup();
+						resolve();
+						return;
+					}
+
+					const currentRun = db
+						.select()
+						.from(workflowRuns)
+						.where(eq(workflowRuns.id, runId))
+						.get();
+
+					if (!currentRun) {
+						cleanup();
+						raw.end();
+						resolve();
+						return;
+					}
+
+					const steps = db
+						.select()
+						.from(workflowRunSteps)
+						.where(eq(workflowRunSteps.runId, runId))
+						.all();
+
+					send("update", { run: serializeRun(currentRun), steps });
+
+					if (
+						currentRun.status === "success" ||
+						currentRun.status === "failed"
+					) {
+						send("done", { status: currentRun.status });
+						cleanup();
+						raw.end();
+						resolve();
+					}
+				}, 500);
+			});
+		},
+	);
+
 	// POST /api/v1/workflows/:id/ai-generate — generate a WorkflowDefinition from a prompt
 	// Currently only the "openai" provider is supported; the `provider` field is
 	// accepted for forward-compatibility and ignored when it is absent or "openai".
