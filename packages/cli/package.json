@@ -39,6 +39,7 @@
 		"clean": "shx rm -rf node_modules .turbo dist"
 	},
 	"dependencies": {
+		"@mdirshadengineer/agentflow-core": "workspace:*",
 		"@fastify/autoload": "6.3.1",
 		"@fastify/cookie": "11.0.2",
 		"@fastify/http-proxy": "11.4.4",
