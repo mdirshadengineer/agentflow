@@ -374,7 +374,11 @@ function ChatTab({ agentId }: { agentId: string }) {
 				throw new Error(body.error ?? "Chat request failed")
 			}
 
-			const reader = resp.body!.getReader()
+			if (!resp.body) {
+				throw new Error("Response body is not readable")
+			}
+
+			const reader = resp.body.getReader()
 			const decoder = new TextDecoder()
 			let buffer = ""
 

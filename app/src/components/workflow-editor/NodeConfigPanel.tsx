@@ -42,7 +42,12 @@ export function NodeConfigPanel({ node, onUpdate, allNodes }: NodeConfigPanelPro
 			})
 	}, [])
 
-	const manifest = manifests.find((m) => m.type === node.type)
+	// For generic nodes, the actual manifest type is stored in data.nodeType
+	const manifestType =
+		node.type === "generic"
+			? (node.data as { nodeType?: string }).nodeType ?? node.type
+			: node.type
+	const manifest = manifests.find((m) => m.type === manifestType)
 
 	// Determine which config UI to render
 	const isBuiltIn =
