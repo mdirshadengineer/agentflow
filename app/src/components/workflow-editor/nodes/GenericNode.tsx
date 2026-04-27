@@ -1,4 +1,4 @@
-import { Handle, Position, type NodeProps } from "@xyflow/react"
+import { Handle, type Node, type NodeProps, Position } from "@xyflow/react"
 import { BoxIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -10,13 +10,13 @@ interface GenericNodeData extends Record<string, unknown> {
 export function GenericNode({
 	data,
 	selected,
-}: NodeProps<{ data: GenericNodeData }>) {
+}: NodeProps<Node<GenericNodeData>>) {
 	const label = data.label ?? data.nodeType ?? "Node"
 	return (
 		<div
 			className={cn(
 				"min-w-36 rounded-lg border bg-card shadow-sm overflow-hidden",
-				selected && "ring-2 ring-primary",
+				selected && "ring-2 ring-primary"
 			)}
 		>
 			<div className="flex items-center gap-1.5 bg-gray-500/10 border-b px-3 py-1.5">
@@ -26,7 +26,9 @@ export function GenericNode({
 				</span>
 			</div>
 			<div className="px-3 py-2">
-				<p className="text-[10px] text-muted-foreground">{data.nodeType ?? "generic"}</p>
+				<p className="text-[10px] text-muted-foreground">
+					{data.nodeType ?? "generic"}
+				</p>
 			</div>
 			<Handle type="target" position={Position.Top} />
 			<Handle type="source" position={Position.Bottom} />

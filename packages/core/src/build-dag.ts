@@ -55,9 +55,7 @@ export function buildDag(raw: unknown): WorkflowDefinition {
 	// ── Canvas format ────────────────────────────────────────────────────────
 	if (Array.isArray(def.nodes)) {
 		const nodes = def.nodes as CanvasNode[];
-		const edges = (
-			Array.isArray(def.edges) ? def.edges : []
-		) as CanvasEdge[];
+		const edges = (Array.isArray(def.edges) ? def.edges : []) as CanvasEdge[];
 
 		// Build a map: targetNodeId → [dependencyNodeIds]
 		const dependencyMap = new Map<string, string[]>();

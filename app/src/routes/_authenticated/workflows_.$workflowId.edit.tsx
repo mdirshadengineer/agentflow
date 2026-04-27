@@ -1,19 +1,19 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
+import { ReactFlowProvider } from "@xyflow/react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
-import { ReactFlowProvider } from "@xyflow/react"
-import { getWorkflow, triggerRun } from "@/lib/api/workflows"
-import type { WorkflowDefinition } from "@/types/workflow"
+import { Skeleton } from "@/components/ui/skeleton"
+import { AiGeneratePanel } from "@/components/workflow-editor/AiGeneratePanel"
+import { NodeConfigPanel } from "@/components/workflow-editor/NodeConfigPanel"
+import { NodeLibrary } from "@/components/workflow-editor/NodeLibrary"
 import { WorkflowCanvas } from "@/components/workflow-editor/WorkflowCanvas"
 import { WorkflowEditorToolbar } from "@/components/workflow-editor/WorkflowEditorToolbar"
-import { NodeLibrary } from "@/components/workflow-editor/NodeLibrary"
-import { NodeConfigPanel } from "@/components/workflow-editor/NodeConfigPanel"
-import { AiGeneratePanel } from "@/components/workflow-editor/AiGeneratePanel"
 import { useWorkflowEditor } from "@/hooks/use-workflow-editor"
-import { Skeleton } from "@/components/ui/skeleton"
+import { getWorkflow, triggerRun } from "@/lib/api/workflows"
+import type { WorkflowDefinition } from "@/types/workflow"
 
 export const Route = createFileRoute(
-	"/_authenticated/workflows/$workflowId/edit",
+	"/_authenticated/workflows_/$workflowId/edit"
 )({
 	component: WorkflowEditorPage,
 })
@@ -35,7 +35,9 @@ function WorkflowEditorPage() {
 				setInitialDefinition(wf.definition ?? EMPTY_DEFINITION)
 			})
 			.catch((err) => {
-				setLoadError(err instanceof Error ? err.message : "Failed to load workflow")
+				setLoadError(
+					err instanceof Error ? err.message : "Failed to load workflow"
+				)
 			})
 	}, [workflowId])
 
@@ -51,7 +53,7 @@ function WorkflowEditorPage() {
 		return (
 			<div className="flex flex-col gap-3 p-6">
 				<Skeleton className="h-12 w-full" />
-				<Skeleton className="h-[400px] w-full" />
+				<Skeleton className="h-100 w-full" />
 			</div>
 		)
 	}
@@ -103,7 +105,10 @@ function EditorInner({
 
 	return (
 		// Use -m-6 to negate the layout's p-6, giving the editor a full-bleed canvas
-		<div className="-m-6 flex flex-col" style={{ height: "calc(100vh - 3rem)" }}>
+		<div
+			className="-m-6 flex flex-col"
+			style={{ height: "calc(100vh - 3rem)" }}
+		>
 			<WorkflowEditorToolbar
 				name={editor.name}
 				onNameChange={(n) => {
@@ -142,7 +147,9 @@ function EditorInner({
 				{editor.selectedNode && (
 					<NodeConfigPanel
 						node={editor.selectedNode}
-						onUpdate={(data) => editor.updateNodeData(editor.selectedNodeId!, data)}
+						onUpdate={(data) =>
+							editor.updateNodeData(editor.selectedNodeId!, data)
+						}
 						allNodes={editor.nodes}
 					/>
 				)}

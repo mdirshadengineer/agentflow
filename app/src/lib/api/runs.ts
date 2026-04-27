@@ -25,9 +25,9 @@ export interface RunDetail extends Run {
 }
 
 async function throwOnError(r: Response): Promise<never> {
-	const body = await r
-		.json()
-		.catch(() => ({ error: "Request failed" })) as { error: string }
+	const body = (await r.json().catch(() => ({ error: "Request failed" }))) as {
+		error: string
+	}
 	throw new Error(body.error ?? "Request failed")
 }
 

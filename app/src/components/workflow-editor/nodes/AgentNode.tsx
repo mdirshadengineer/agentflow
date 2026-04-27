@@ -1,18 +1,15 @@
-import { Handle, Position, type NodeProps } from "@xyflow/react"
+import { Handle, type Node, type NodeProps, Position } from "@xyflow/react"
 import { BotIcon } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import type { AgentNodeData } from "@/types/workflow"
 
-export function AgentNode({
-	data,
-	selected,
-}: NodeProps<{ data: AgentNodeData }>) {
+export function AgentNode({ data, selected }: NodeProps<Node<AgentNodeData>>) {
 	return (
 		<div
 			className={cn(
 				"min-w-36 rounded-lg border bg-card shadow-sm overflow-hidden",
-				selected && "ring-2 ring-primary",
+				selected && "ring-2 ring-primary"
 			)}
 		>
 			<div className="flex items-center gap-1.5 bg-blue-500/10 border-b px-3 py-1.5">

@@ -1,7 +1,12 @@
-import { useEffect, useRef, useState } from "react"
 import { ChevronDownIcon, ChevronRightIcon } from "lucide-react"
-import { listAgents, type Agent } from "@/lib/api/agents"
-import { listNodes, type NodeManifest } from "@/lib/api/nodes"
+import { useEffect, useRef, useState } from "react"
+import { Button } from "@/components/ui/button"
+import {
+	Collapsible,
+	CollapsibleContent,
+	CollapsibleTrigger,
+} from "@/components/ui/collapsible"
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import {
 	Select,
@@ -10,10 +15,9 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Textarea } from "@/components/ui/textarea"
-import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible"
-import { Button } from "@/components/ui/button"
+import { type Agent, listAgents } from "@/lib/api/agents"
+import { listNodes, type NodeManifest } from "@/lib/api/nodes"
 import type { WorkflowNode } from "@/types/workflow"
 
 interface NodeConfigPanelProps {
@@ -22,7 +26,11 @@ interface NodeConfigPanelProps {
 	allNodes?: WorkflowNode[]
 }
 
-export function NodeConfigPanel({ node, onUpdate, allNodes }: NodeConfigPanelProps) {
+export function NodeConfigPanel({
+	node,
+	onUpdate,
+	allNodes,
+}: NodeConfigPanelProps) {
 	const [agents, setAgents] = useState<Agent[]>([])
 	const [manifests, setManifests] = useState<NodeManifest[]>([])
 
@@ -45,7 +53,7 @@ export function NodeConfigPanel({ node, onUpdate, allNodes }: NodeConfigPanelPro
 	// For generic nodes, the actual manifest type is stored in data.nodeType
 	const manifestType =
 		node.type === "generic"
-			? (node.data as { nodeType?: string }).nodeType ?? node.type
+			? ((node.data as { nodeType?: string }).nodeType ?? node.type)
 			: node.type
 	const manifest = manifests.find((m) => m.type === manifestType)
 
@@ -75,17 +83,27 @@ export function NodeConfigPanel({ node, onUpdate, allNodes }: NodeConfigPanelPro
 						/>
 					</Field>
 
-					{node.type === "trigger" && <TriggerConfig node={node} onUpdate={onUpdate} />}
+					{node.type === "trigger" && (
+						<TriggerConfig node={node} onUpdate={onUpdate} />
+					)}
 					{node.type === "agent" && (
 						<AgentConfig node={node} agents={agents} onUpdate={onUpdate} />
 					)}
 					{node.type === "condition" && (
-						<ConditionConfig node={node} onUpdate={onUpdate} allNodes={allNodes} />
+						<ConditionConfig
+							node={node}
+							onUpdate={onUpdate}
+							allNodes={allNodes}
+						/>
 					)}
-					{node.type === "output" && <OutputConfig node={node} onUpdate={onUpdate} />}
+					{node.type === "output" && (
+						<OutputConfig node={node} onUpdate={onUpdate} />
+					)}
 					{!isBuiltIn && (
 						<SchemaForm
-							schema={manifest?.configSchema ?? { type: "object", properties: {} }}
+							schema={
+								manifest?.configSchema ?? { type: "object", properties: {} }
+							}
 							data={node.data as Record<string, unknown>}
 							onUpdate={onUpdate}
 						/>
@@ -98,7 +116,14 @@ export function NodeConfigPanel({ node, onUpdate, allNodes }: NodeConfigPanelPro
 
 // ── Schema-driven form ────────────────────────────────────────────────────────
 
-const MULTILINE_KEYWORDS = ["body", "prompt", "expression", "content", "message", "description"]
+const MULTILINE_KEYWORDS = [
+	"body",
+	"prompt",
+	"expression",
+	"content",
+	"message",
+	"description",
+]
 
 function isMultiline(key: string, description = ""): boolean {
 	const combined = (key + " " + description).toLowerCase()
@@ -142,7 +167,9 @@ function SchemaForm({
 								</SelectContent>
 							</Select>
 							{prop.description && (
-								<p className="text-[10px] text-muted-foreground">{prop.description}</p>
+								<p className="text-[10px] text-muted-foreground">
+									{prop.description}
+								</p>
 							)}
 						</Field>
 					)
@@ -162,7 +189,9 @@ function SchemaForm({
 								<FieldLabel htmlFor={`schema-${key}`}>{key}</FieldLabel>
 							</div>
 							{prop.description && (
-								<p className="text-[10px] text-muted-foreground">{prop.description}</p>
+								<p className="text-[10px] text-muted-foreground">
+									{prop.description}
+								</p>
 							)}
 						</Field>
 					)
@@ -183,7 +212,9 @@ function SchemaForm({
 								className="h-7 text-xs"
 							/>
 							{prop.description && (
-								<p className="text-[10px] text-muted-foreground">{prop.description}</p>
+								<p className="text-[10px] text-muted-foreground">
+									{prop.description}
+								</p>
 							)}
 						</Field>
 					)
@@ -210,7 +241,9 @@ function SchemaForm({
 								className="text-xs font-mono"
 							/>
 							{prop.description && (
-								<p className="text-[10px] text-muted-foreground">{prop.description}</p>
+								<p className="text-[10px] text-muted-foreground">
+									{prop.description}
+								</p>
 							)}
 						</Field>
 					)
@@ -228,7 +261,9 @@ function SchemaForm({
 								className="text-xs"
 							/>
 							{prop.description && (
-								<p className="text-[10px] text-muted-foreground">{prop.description}</p>
+								<p className="text-[10px] text-muted-foreground">
+									{prop.description}
+								</p>
 							)}
 						</Field>
 					)
@@ -243,7 +278,9 @@ function SchemaForm({
 							className="h-7 text-xs"
 						/>
 						{prop.description && (
-							<p className="text-[10px] text-muted-foreground">{prop.description}</p>
+							<p className="text-[10px] text-muted-foreground">
+								{prop.description}
+							</p>
 						)}
 					</Field>
 				)
@@ -257,8 +294,15 @@ function SchemaForm({
 function TriggerConfig({
 	node,
 	onUpdate,
-}: { node: WorkflowNode; onUpdate: (d: Record<string, unknown>) => void }) {
-	const d = node.data as { triggerType?: string; cron?: string; webhookPath?: string }
+}: {
+	node: WorkflowNode
+	onUpdate: (d: Record<string, unknown>) => void
+}) {
+	const d = node.data as {
+		triggerType?: string
+		cron?: string
+		webhookPath?: string
+	}
 	return (
 		<>
 			<Field>
@@ -446,7 +490,10 @@ function ConditionConfig({
 function OutputConfig({
 	node,
 	onUpdate,
-}: { node: WorkflowNode; onUpdate: (d: Record<string, unknown>) => void }) {
+}: {
+	node: WorkflowNode
+	onUpdate: (d: Record<string, unknown>) => void
+}) {
 	const d = node.data as { outputKey?: string }
 	return (
 		<Field>

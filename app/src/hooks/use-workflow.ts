@@ -35,11 +35,13 @@ export function useWorkflows() {
 				reload()
 				return wf
 			} catch (err) {
-				toast.error(err instanceof Error ? err.message : "Failed to create workflow")
+				toast.error(
+					err instanceof Error ? err.message : "Failed to create workflow"
+				)
 				return null
 			}
 		},
-		[reload],
+		[reload]
 	)
 
 	const handleDelete = useCallback(
@@ -53,7 +55,7 @@ export function useWorkflows() {
 				toast.error("Failed to delete workflow")
 			}
 		},
-		[reload],
+		[reload]
 	)
 
 	const handleRun = useCallback(async (id: string): Promise<string | null> => {

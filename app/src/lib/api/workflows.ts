@@ -22,9 +22,9 @@ export interface WorkflowRun {
 }
 
 async function throwOnError(r: Response): Promise<never> {
-	const body = await r
-		.json()
-		.catch(() => ({ error: "Request failed" })) as { error: string }
+	const body = (await r.json().catch(() => ({ error: "Request failed" }))) as {
+		error: string
+	}
 	throw new Error(body.error ?? "Request failed")
 }
 
@@ -60,7 +60,7 @@ export async function updateWorkflow(
 		name?: string
 		description?: string
 		definition?: WorkflowDefinition
-	},
+	}
 ): Promise<Workflow> {
 	const r = await fetch(`/api/v1/workflows/${id}`, {
 		method: "PATCH",
@@ -95,7 +95,7 @@ export async function listRuns(workflowId: string): Promise<WorkflowRun[]> {
 export async function aiGenerateWorkflow(
 	workflowId: string,
 	prompt: string,
-	options?: { provider?: string; model?: string },
+	options?: { provider?: string; model?: string }
 ): Promise<WorkflowDefinition> {
 	const r = await fetch(`/api/v1/workflows/${workflowId}/ai-generate`, {
 		method: "POST",

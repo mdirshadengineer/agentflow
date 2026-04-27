@@ -1,4 +1,4 @@
-import { Handle, Position, type NodeProps } from "@xyflow/react"
+import { Handle, type Node, type NodeProps, Position } from "@xyflow/react"
 import { FlagIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { OutputNodeData } from "@/types/workflow"
@@ -6,12 +6,12 @@ import type { OutputNodeData } from "@/types/workflow"
 export function OutputNode({
 	data,
 	selected,
-}: NodeProps<{ data: OutputNodeData }>) {
+}: NodeProps<Node<OutputNodeData>>) {
 	return (
 		<div
 			className={cn(
 				"min-w-36 rounded-lg border bg-card shadow-sm overflow-hidden",
-				selected && "ring-2 ring-primary",
+				selected && "ring-2 ring-primary"
 			)}
 		>
 			<div className="flex items-center gap-1.5 bg-purple-500/10 border-b px-3 py-1.5">

@@ -1,20 +1,20 @@
-import { useCallback, useState } from "react"
 import {
 	Background,
 	Controls,
 	MiniMap,
-	ReactFlow,
 	type NodeMouseHandler,
+	ReactFlow,
 	type ReactFlowInstance,
 } from "@xyflow/react"
+import { useCallback, useState } from "react"
 import "@xyflow/react/dist/style.css"
-import { TriggerNode } from "./nodes/TriggerNode"
+import type { Connection, EdgeChange, NodeChange } from "@xyflow/react"
+import type { WorkflowEdge, WorkflowNode } from "@/types/workflow"
 import { AgentNode } from "./nodes/AgentNode"
 import { ConditionNode } from "./nodes/ConditionNode"
-import { OutputNode } from "./nodes/OutputNode"
 import { GenericNode } from "./nodes/GenericNode"
-import type { WorkflowNode, WorkflowEdge } from "@/types/workflow"
-import type { EdgeChange, NodeChange, Connection } from "@xyflow/react"
+import { OutputNode } from "./nodes/OutputNode"
+import { TriggerNode } from "./nodes/TriggerNode"
 
 const NODE_TYPES = {
 	trigger: TriggerNode,
@@ -27,7 +27,7 @@ const NODE_TYPES = {
 interface WorkflowCanvasProps {
 	nodes: WorkflowNode[]
 	edges: WorkflowEdge[]
-	onNodesChange: (changes: NodeChange[]) => void
+	onNodesChange: (changes: NodeChange<WorkflowNode>[]) => void
 	onEdgesChange: (changes: EdgeChange[]) => void
 	onConnect: (connection: Connection) => void
 	onNodeClick: (nodeId: string) => void
@@ -46,13 +46,16 @@ export function WorkflowCanvas({
 	onAddNode,
 }: WorkflowCanvasProps) {
 	// Capture the RF instance via onInit so we can call screenToFlowPosition on drop
-	const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null)
+	const [rfInstance, setRfInstance] = useState<ReactFlowInstance<
+		WorkflowNode,
+		WorkflowEdge
+	> | null>(null)
 
 	const handleNodeClick: NodeMouseHandler = useCallback(
 		(_event, node) => {
 			onNodeClick(node.id)
 		},
-		[onNodeClick],
+		[onNodeClick]
 	)
 
 	const onDragOver = useCallback((event: React.DragEvent) => {
@@ -64,7 +67,7 @@ export function WorkflowCanvas({
 		(event: React.DragEvent) => {
 			event.preventDefault()
 			const nodeType = event.dataTransfer.getData(
-				"application/agentflow-node-type",
+				"application/agentflow-node-type"
 			)
 			if (!nodeType || !rfInstance) return
 			const position = rfInstance.screenToFlowPosition({
@@ -73,7 +76,7 @@ export function WorkflowCanvas({
 			})
 			onAddNode(nodeType, position)
 		},
-		[rfInstance, onAddNode],
+		[rfInstance, onAddNode]
 	)
 
 	return (

@@ -1,6 +1,7 @@
-import { useState } from "react"
 import { SparklesIcon } from "lucide-react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
+import { Field, FieldLabel } from "@/components/ui/field"
 import {
 	Sheet,
 	SheetContent,
@@ -10,7 +11,6 @@ import {
 	SheetTitle,
 } from "@/components/ui/sheet"
 import { Textarea } from "@/components/ui/textarea"
-import { Field, FieldLabel } from "@/components/ui/field"
 
 interface AiGeneratePanelProps {
 	open: boolean
@@ -51,8 +51,8 @@ export function AiGeneratePanel({
 						AI Workflow Generator
 					</SheetTitle>
 					<SheetDescription>
-						Describe your workflow in plain English and let AI generate the nodes
-						and connections for you. Review the result before saving.
+						Describe your workflow in plain English and let AI generate the
+						nodes and connections for you. Review the result before saving.
 					</SheetDescription>
 				</SheetHeader>
 

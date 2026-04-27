@@ -1,14 +1,23 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router"
-import { ArrowLeftIcon, ChevronDownIcon, ChevronRightIcon, SendIcon } from "lucide-react"
+import {
+	ArrowLeftIcon,
+	ChevronDownIcon,
+	ChevronRightIcon,
+	SendIcon,
+} from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { Checkbox } from "@/components/ui/checkbox"
+import {
+	Collapsible,
+	CollapsibleContent,
+	CollapsibleTrigger,
+} from "@/components/ui/collapsible"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
 import {
 	Select,
 	SelectContent,
@@ -23,7 +32,7 @@ import type { Agent } from "@/lib/api/agents"
 import { listTools, type ToolInfo } from "@/lib/api/tools"
 import { cn } from "@/lib/utils"
 
-export const Route = createFileRoute("/_authenticated/agents/$agentId")({
+export const Route = createFileRoute("/_authenticated/agents_/$agentId")({
 	component: AgentDetailPage,
 })
 
@@ -101,7 +110,9 @@ function AgentDetailPage() {
 
 	const toggleTool = (toolName: string) => {
 		setSelectedTools((prev) =>
-			prev.includes(toolName) ? prev.filter((t) => t !== toolName) : [...prev, toolName],
+			prev.includes(toolName)
+				? prev.filter((t) => t !== toolName)
+				: [...prev, toolName]
 		)
 	}
 
@@ -148,7 +159,8 @@ function AgentDetailPage() {
 	}
 
 	const handleDelete = async () => {
-		if (!confirm(`Delete agent "${agent?.name}"? This cannot be undone.`)) return
+		if (!confirm(`Delete agent "${agent?.name}"? This cannot be undone.`))
+			return
 		setDeleting(true)
 		try {
 			const r = await fetch(`/api/v1/agents/${agentId}`, { method: "DELETE" })
@@ -238,7 +250,9 @@ function AgentDetailPage() {
 											/>
 										</Field>
 										<Field>
-											<FieldLabel htmlFor="llmProvider">LLM Provider</FieldLabel>
+											<FieldLabel htmlFor="llmProvider">
+												LLM Provider
+											</FieldLabel>
 											<Select
 												value={llmProvider}
 												onValueChange={setLlmProvider}
@@ -263,7 +277,9 @@ function AgentDetailPage() {
 											/>
 										</Field>
 										<Field>
-											<FieldLabel htmlFor="systemPrompt">System Prompt</FieldLabel>
+											<FieldLabel htmlFor="systemPrompt">
+												System Prompt
+											</FieldLabel>
 											<Textarea
 												id="systemPrompt"
 												rows={4}
@@ -277,7 +293,10 @@ function AgentDetailPage() {
 												<FieldLabel>Tools</FieldLabel>
 												<div className="space-y-2 pt-1">
 													{tools.map((tool) => (
-														<div key={tool.name} className="flex items-start gap-2">
+														<div
+															key={tool.name}
+															className="flex items-start gap-2"
+														>
 															<Checkbox
 																id={`tool-${tool.name}`}
 																checked={selectedTools.includes(tool.name)}
@@ -548,14 +567,18 @@ function MessageBubble({ message }: { message: ChatMessage }) {
 	// tool_call
 	return (
 		<div className="flex justify-start w-full">
-			<Collapsible open={open} onOpenChange={setOpen} className="w-full max-w-[90%]">
+			<Collapsible
+				open={open}
+				onOpenChange={setOpen}
+				className="w-full max-w-[90%]"
+			>
 				<CollapsibleTrigger asChild>
 					<button
 						type="button"
 						className={cn(
 							"flex items-center gap-1.5 w-full rounded-lg border px-3 py-2 text-xs",
 							"bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-400",
-							"hover:bg-amber-500/15 transition-colors",
+							"hover:bg-amber-500/15 transition-colors"
 						)}
 					>
 						{open ? (

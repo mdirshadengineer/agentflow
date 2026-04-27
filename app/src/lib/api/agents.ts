@@ -16,9 +16,9 @@ export interface Agent {
 }
 
 async function throwOnError(r: Response): Promise<never> {
-	const body = await r
-		.json()
-		.catch(() => ({ error: "Request failed" })) as { error: string }
+	const body = (await r.json().catch(() => ({ error: "Request failed" }))) as {
+		error: string
+	}
 	throw new Error(body.error ?? "Request failed")
 }
 
@@ -60,7 +60,7 @@ export async function updateAgent(
 		llmModel?: string | null
 		systemPrompt?: string | null
 		tools?: string[] | null
-	},
+	}
 ): Promise<Agent> {
 	const r = await fetch(`/api/v1/agents/${id}`, {
 		method: "PATCH",

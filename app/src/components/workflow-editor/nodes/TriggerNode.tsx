@@ -1,4 +1,4 @@
-import { Handle, Position, type NodeProps } from "@xyflow/react"
+import { Handle, type Node, type NodeProps, Position } from "@xyflow/react"
 import { ZapIcon } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
@@ -13,13 +13,13 @@ const TRIGGER_LABELS: Record<string, string> = {
 export function TriggerNode({
 	data,
 	selected,
-}: NodeProps<{ data: TriggerNodeData }>) {
+}: NodeProps<Node<TriggerNodeData>>) {
 	const triggerLabel = TRIGGER_LABELS[data.triggerType] ?? data.triggerType
 	return (
 		<div
 			className={cn(
 				"min-w-36 rounded-lg border bg-card shadow-sm overflow-hidden",
-				selected && "ring-2 ring-primary",
+				selected && "ring-2 ring-primary"
 			)}
 		>
 			<div className="flex items-center gap-1.5 bg-green-500/10 border-b px-3 py-1.5">

@@ -1,13 +1,14 @@
 import { randomUUID } from "node:crypto";
-import { and, eq } from "drizzle-orm";
-import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import {
 	AnthropicProvider,
-	OpenAIProvider,
-	defaultToolRegistry,
 	type ChatMessage,
+	defaultToolRegistry,
+	type LLMOptions,
 	type LLMProvider,
+	OpenAIProvider,
 } from "@mdirshadengineer/agentflow-core";
+import { and, eq } from "drizzle-orm";
+import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { agentSessions, agents, getDb } from "../../../../db/index.js";
 import { requireAuth } from "../../../middleware/auth.js";
 
@@ -57,15 +58,14 @@ function buildLLMProvider(row: typeof agents.$inferSelect): LLMProvider {
 	if (provider === "ollama") {
 		return new OpenAIProvider({
 			baseUrl:
-				(config.baseUrl as string | undefined) ??
-				"http://localhost:11434/v1",
+				(config.baseUrl as string | undefined) ?? "http://localhost:11434/v1",
 			apiKey: "ollama",
 		});
 	}
 
 	// "openai" or any OpenAI-compatible endpoint
 	return new OpenAIProvider({
-		baseUrl: config.baseUrl as string | undefined,
+		baseUrl: config.baseUrl as string,
 	});
 }
 
@@ -102,7 +102,16 @@ export default async function agentsRoutes(fastify: FastifyInstance) {
 		};
 	}>("/", { preHandler: requireAuth }, async (request, reply) => {
 		const { userId } = request.user as JWTPayload;
-		const { name, description, type, config, llmProvider, llmModel, systemPrompt, tools } = request.body;
+		const {
+			name,
+			description,
+			type,
+			config,
+			llmProvider,
+			llmModel,
+			systemPrompt,
+			tools,
+		} = request.body;
 
 		if (!name || !type) {
 			return reply.code(400).send({ error: "name and type are required" });
@@ -174,7 +183,16 @@ export default async function agentsRoutes(fastify: FastifyInstance) {
 	}>("/:id", { preHandler: requireAuth }, async (request, reply) => {
 		const { userId } = request.user as JWTPayload;
 		const { id } = request.params;
-		const { name, description, type, config, llmProvider, llmModel, systemPrompt, tools } = request.body;
+		const {
+			name,
+			description,
+			type,
+			config,
+			llmProvider,
+			llmModel,
+			systemPrompt,
+			tools,
+		} = request.body;
 		const db = getDb();
 
 		const existing = db
@@ -263,7 +281,8 @@ export default async function agentsRoutes(fastify: FastifyInstance) {
 			llmProvider = buildLLMProvider(agent);
 		} catch (err) {
 			return reply.code(503).send({
-				error: err instanceof Error ? err.message : "LLM provider not configured",
+				error:
+					err instanceof Error ? err.message : "LLM provider not configured",
 			});
 		}
 
@@ -349,7 +368,7 @@ export default async function agentsRoutes(fastify: FastifyInstance) {
 
 		const llmOptions = {
 			model: agent.llmModel ?? undefined,
-		};
+		} as LLMOptions;
 
 		try {
 			// Run the agent loop
@@ -373,7 +392,10 @@ export default async function agentsRoutes(fastify: FastifyInstance) {
 
 				if (response.toolCalls.length === 0) {
 					// Final assistant response — stream it
-					sendEvent("message", { role: "assistant", content: response.content ?? "" });
+					sendEvent("message", {
+						role: "assistant",
+						content: response.content ?? "",
+					});
 					break;
 				}
 
@@ -479,10 +501,7 @@ export default async function agentsRoutes(fastify: FastifyInstance) {
 				.select()
 				.from(agentSessions)
 				.where(
-					and(
-						eq(agentSessions.id, sessionId),
-						eq(agentSessions.agentId, id),
-					),
+					and(eq(agentSessions.id, sessionId), eq(agentSessions.agentId, id)),
 				)
 				.get();
 

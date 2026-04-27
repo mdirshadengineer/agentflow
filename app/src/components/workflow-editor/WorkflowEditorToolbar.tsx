@@ -1,5 +1,5 @@
-import { ArrowLeftIcon, PlayIcon, SaveIcon, SparklesIcon } from "lucide-react"
 import { Link } from "@tanstack/react-router"
+import { ArrowLeftIcon, PlayIcon, SaveIcon, SparklesIcon } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"

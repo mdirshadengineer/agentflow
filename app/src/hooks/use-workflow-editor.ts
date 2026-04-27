@@ -1,13 +1,17 @@
-import { useCallback, useEffect, useRef, useState } from "react"
 import {
 	addEdge,
 	type Connection,
 	useEdgesState,
 	useNodesState,
 } from "@xyflow/react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import { aiGenerateWorkflow, updateWorkflow } from "@/lib/api/workflows"
-import type { WorkflowDefinition, WorkflowNode, WorkflowNodeType } from "@/types/workflow"
+import type {
+	WorkflowDefinition,
+	WorkflowNode,
+	WorkflowNodeType,
+} from "@/types/workflow"
 
 const AUTOSAVE_DELAY_MS = 2000
 
@@ -30,7 +34,7 @@ export function useWorkflowEditor({
 	const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
 	const [aiPanelOpen, setAiPanelOpen] = useState(false)
 	const autosaveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
-		undefined,
+		undefined
 	)
 
 	const onConnect = useCallback(
@@ -38,7 +42,7 @@ export function useWorkflowEditor({
 			setEdges((eds) => addEdge(connection, eds))
 			setIsDirty(true)
 		},
-		[setEdges],
+		[setEdges]
 	)
 
 	const markDirty = useCallback(() => setIsDirty(true), [])
@@ -46,12 +50,17 @@ export function useWorkflowEditor({
 	const save = useCallback(async (): Promise<void> => {
 		setSaving(true)
 		try {
-			const definition: WorkflowDefinition = { nodes: nodes as WorkflowNode[], edges }
+			const definition: WorkflowDefinition = {
+				nodes: nodes as WorkflowNode[],
+				edges,
+			}
 			await updateWorkflow(workflowId, { name, definition })
 			setIsDirty(false)
 			toast.success("Workflow saved")
 		} catch (err) {
-			toast.error(err instanceof Error ? err.message : "Failed to save workflow")
+			toast.error(
+				err instanceof Error ? err.message : "Failed to save workflow"
+			)
 		} finally {
 			setSaving(false)
 		}
@@ -96,28 +105,29 @@ export function useWorkflowEditor({
 			setNodes((nds) => [...nds, newNode as WorkflowNode])
 			setIsDirty(true)
 		},
-		[setNodes],
+		[setNodes]
 	)
 
 	const updateNodeData = useCallback(
 		(nodeId: string, data: Record<string, unknown>) => {
 			setNodes((nds) =>
 				nds.map((n) =>
-					n.id === nodeId ? { ...n, data: { ...n.data, ...data } } : n,
-				),
+					n.id === nodeId
+						? ({ ...n, data: { ...n.data, ...data } } as WorkflowNode)
+						: n
+				)
 			)
 			setIsDirty(true)
 		},
-		[setNodes],
+		[setNodes]
 	)
-
 	const applyAiDefinition = useCallback(
 		(definition: WorkflowDefinition) => {
 			setNodes(definition.nodes)
 			setEdges(definition.edges)
 			setIsDirty(true)
 		},
-		[setNodes, setEdges],
+		[setNodes, setEdges]
 	)
 
 	const runAiGenerate = useCallback(
@@ -126,7 +136,7 @@ export function useWorkflowEditor({
 			applyAiDefinition(definition)
 			toast.success("AI workflow generated — review and save")
 		},
-		[workflowId, applyAiDefinition],
+		[workflowId, applyAiDefinition]
 	)
 
 	const selectedNode = nodes.find((n) => n.id === selectedNodeId) ?? null

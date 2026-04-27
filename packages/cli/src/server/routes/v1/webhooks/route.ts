@@ -38,7 +38,9 @@ export default async function webhooksRoutes(fastify: FastifyInstance) {
 			}
 
 			if (matched.length === 0) {
-				return reply.code(404).send({ error: "No workflow found for this webhook path" });
+				return reply
+					.code(404)
+					.send({ error: "No workflow found for this webhook path" });
 			}
 
 			return reply.code(202).send({ enqueued: matched });
@@ -53,7 +55,11 @@ export default async function webhooksRoutes(fastify: FastifyInstance) {
  * Supports both the canvas format (nodes[]) and the steps format (steps[]).
  */
 function hasWebhookTrigger(definition: unknown, path: string): boolean {
-	if (!definition || typeof definition !== "object" || Array.isArray(definition)) {
+	if (
+		!definition ||
+		typeof definition !== "object" ||
+		Array.isArray(definition)
+	) {
 		return false;
 	}
 

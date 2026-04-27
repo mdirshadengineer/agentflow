@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export const Route = createFileRoute(
-	"/_authenticated/workflows/$workflowId/runs"
+	"/_authenticated/workflows_/$workflowId/runs"
 )({
 	component: WorkflowRunsPage,
 })

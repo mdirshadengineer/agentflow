@@ -13,11 +13,15 @@ import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import {
+	Collapsible,
+	CollapsibleContent,
+	CollapsibleTrigger,
+} from "@/components/ui/collapsible"
 import { Skeleton } from "@/components/ui/skeleton"
 import { type RunStep, useRunStream } from "@/hooks/use-run-stream"
 
-export const Route = createFileRoute("/_authenticated/runs/$runId")({
+export const Route = createFileRoute("/_authenticated/runs_/$runId")({
 	component: RunDetailPage,
 })
 
