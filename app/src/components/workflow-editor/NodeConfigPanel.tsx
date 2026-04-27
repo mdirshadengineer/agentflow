@@ -176,7 +176,10 @@ function SchemaForm({
 								type="number"
 								min={prop.minimum}
 								value={String(value ?? prop.default ?? "")}
-								onChange={(e) => onUpdate({ [key]: e.target.valueAsNumber })}
+								onChange={(e) => {
+									const n = e.target.valueAsNumber
+									onUpdate({ [key]: Number.isFinite(n) ? n : undefined })
+								}}
 								className="h-7 text-xs"
 							/>
 							{prop.description && (
@@ -363,8 +366,23 @@ function ConditionConfig({
 	const upstreamNodes = (allNodes ?? []).filter((n) => n.id !== node.id)
 
 	const insertVariable = (variable: string) => {
-		const current = d.condition ?? ""
-		onUpdate({ condition: current ? `${current} ${variable}` : variable })
+		const ta = textareaRef.current
+		if (ta) {
+			const start = ta.selectionStart ?? 0
+			const end = ta.selectionEnd ?? 0
+			const current = d.condition ?? ""
+			const updated = current.slice(0, start) + variable + current.slice(end)
+			onUpdate({ condition: updated })
+			// Restore cursor after React re-render
+			requestAnimationFrame(() => {
+				ta.selectionStart = start + variable.length
+				ta.selectionEnd = start + variable.length
+				ta.focus()
+			})
+		} else {
+			const current = d.condition ?? ""
+			onUpdate({ condition: current ? `${current} ${variable}` : variable })
+		}
 	}
 
 	return (
