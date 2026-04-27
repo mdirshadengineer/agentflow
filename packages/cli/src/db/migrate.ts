@@ -58,8 +58,14 @@ export function runMigrations() {
 	]) {
 		try {
 			db.run(sql.raw(ddl));
-		} catch {
-			// column already exists — safe to ignore
+		} catch (err) {
+			// SQLite raises an error when a column already exists; ignore only that case
+			if (
+				!(err instanceof Error) ||
+				!err.message.includes("duplicate column name")
+			) {
+				throw err;
+			}
 		}
 	}
 
