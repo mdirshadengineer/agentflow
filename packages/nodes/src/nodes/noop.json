@@ -1,0 +1,15 @@
+{
+	"type": "noop",
+	"label": "No-Op",
+	"description": "Passes through without performing any action. Useful as a placeholder or synchronisation barrier.",
+	"configSchema": {
+		"type": "object",
+		"properties": {},
+		"additionalProperties": false
+	},
+	"outputSchema": {
+		"type": "object",
+		"properties": {},
+		"additionalProperties": false
+	}
+}

@@ -1,0 +1,25 @@
+{
+	"type": "delay",
+	"label": "Delay",
+	"description": "Pauses workflow execution for a specified number of milliseconds.",
+	"configSchema": {
+		"type": "object",
+		"properties": {
+			"ms": {
+				"type": "number",
+				"description": "Number of milliseconds to wait.",
+				"minimum": 0
+			}
+		},
+		"required": ["ms"]
+	},
+	"outputSchema": {
+		"type": "object",
+		"properties": {
+			"waited": {
+				"type": "number",
+				"description": "The actual number of milliseconds waited."
+			}
+		}
+	}
+}

@@ -1,0 +1,42 @@
+{
+	"type": "http-request",
+	"label": "HTTP Request",
+	"description": "Sends an HTTP request to a URL and returns the response status code and body.",
+	"configSchema": {
+		"type": "object",
+		"properties": {
+			"url": {
+				"type": "string",
+				"description": "The URL to request."
+			},
+			"method": {
+				"type": "string",
+				"description": "HTTP method (GET, POST, PUT, PATCH, DELETE).",
+				"default": "GET"
+			},
+			"headers": {
+				"type": "object",
+				"description": "HTTP headers as key-value string pairs.",
+				"additionalProperties": { "type": "string" }
+			},
+			"body": {
+				"type": "string",
+				"description": "Raw request body (for POST / PUT / PATCH requests)."
+			}
+		},
+		"required": ["url"]
+	},
+	"outputSchema": {
+		"type": "object",
+		"properties": {
+			"status": {
+				"type": "number",
+				"description": "HTTP response status code."
+			},
+			"body": {
+				"type": "string",
+				"description": "Response body as text."
+			}
+		}
+	}
+}
