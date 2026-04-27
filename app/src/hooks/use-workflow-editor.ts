@@ -74,19 +74,24 @@ export function useWorkflowEditor({
 	}, [isDirty, save])
 
 	const addNode = useCallback(
-		(type: WorkflowNodeType, position: { x: number; y: number }) => {
+		(type: string, position: { x: number; y: number }) => {
 			const id = crypto.randomUUID()
-			const defaults: Record<WorkflowNodeType, object> = {
+			const knownDefaults: Record<WorkflowNodeType, object> = {
 				trigger: { label: "Trigger", triggerType: "manual" },
 				agent: { label: "Agent", agentId: "" },
 				condition: { label: "Condition", condition: "output.result === true" },
 				output: { label: "Output" },
 			}
+			const isKnown = type in knownDefaults
+			const rfType = isKnown ? type : "generic"
+			const data = isKnown
+				? knownDefaults[type as WorkflowNodeType]
+				: { label: type, nodeType: type }
 			const newNode = {
 				id,
-				type,
+				type: rfType,
 				position,
-				data: defaults[type],
+				data,
 			}
 			setNodes((nds) => [...nds, newNode as WorkflowNode])
 			setIsDirty(true)

@@ -3,13 +3,17 @@ import {
 	ActivityIcon,
 	ArrowLeftIcon,
 	CheckCircleIcon,
+	ChevronDownIcon,
+	ChevronRightIcon,
 	CircleDashedIcon,
 	ClockIcon,
 	XCircleIcon,
 } from "lucide-react"
+import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Skeleton } from "@/components/ui/skeleton"
 import { type RunStep, useRunStream } from "@/hooks/use-run-stream"
 
@@ -50,25 +54,43 @@ function formatDuration(
 }
 
 function StepCard({ step }: { step: RunStep }) {
+	const [expanded, setExpanded] = useState(false)
+	const hasDetails = Boolean(step.logs)
+
 	return (
-		<div className="rounded-lg border bg-card overflow-hidden">
-			<div className="flex items-center gap-2 px-3 py-2 border-b bg-muted/30">
-				<StepIcon status={step.status} />
-				<span className="text-xs font-medium flex-1">{step.stepName}</span>
-				<Badge variant={statusVariant(step.status)} className="shrink-0">
-					{step.status}
-				</Badge>
-				<span className="text-xs text-muted-foreground tabular-nums flex items-center gap-1">
-					<ClockIcon className="size-3" />
-					{formatDuration(step.startedAt, step.finishedAt)}
-				</span>
+		<Collapsible open={expanded} onOpenChange={setExpanded}>
+			<div className="rounded-lg border bg-card overflow-hidden">
+				<div className="flex items-center gap-2 px-3 py-2 border-b bg-muted/30">
+					<StepIcon status={step.status} />
+					<span className="text-xs font-medium flex-1">{step.stepName}</span>
+					<Badge variant={statusVariant(step.status)} className="shrink-0">
+						{step.status}
+					</Badge>
+					<span className="text-xs text-muted-foreground tabular-nums flex items-center gap-1">
+						<ClockIcon className="size-3" />
+						{formatDuration(step.startedAt, step.finishedAt)}
+					</span>
+					{hasDetails && (
+						<CollapsibleTrigger asChild>
+							<Button variant="ghost" size="icon-sm" className="size-5">
+								{expanded ? (
+									<ChevronDownIcon className="size-3" />
+								) : (
+									<ChevronRightIcon className="size-3" />
+								)}
+							</Button>
+						</CollapsibleTrigger>
+					)}
+				</div>
+				<CollapsibleContent>
+					{step.logs && (
+						<pre className="px-3 py-2 text-xs font-mono text-muted-foreground whitespace-pre-wrap break-words border-t">
+							{step.logs}
+						</pre>
+					)}
+				</CollapsibleContent>
 			</div>
-			{step.logs && (
-				<pre className="px-3 py-2 text-xs font-mono text-muted-foreground whitespace-pre-wrap break-words">
-					{step.logs}
-				</pre>
-			)}
-		</div>
+		</Collapsible>
 	)
 }
 
