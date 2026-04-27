@@ -7,6 +7,10 @@ export interface Agent {
 	description: string | null
 	type: string
 	config: unknown
+	llmProvider: string | null
+	llmModel: string | null
+	systemPrompt: string | null
+	tools: string[] | null
 	createdAt: number
 	updatedAt: number
 }
@@ -52,6 +56,10 @@ export async function updateAgent(
 		type?: string
 		description?: string
 		config?: unknown
+		llmProvider?: string | null
+		llmModel?: string | null
+		systemPrompt?: string | null
+		tools?: string[] | null
 	},
 ): Promise<Agent> {
 	const r = await fetch(`/api/v1/agents/${id}`, {

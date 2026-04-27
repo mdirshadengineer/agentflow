@@ -45,6 +45,15 @@ export interface OutputNodeData extends Record<string, unknown> {
 	outputKey?: string
 }
 
+// ── Generic node ──────────────────────────────────────────────────────────────
+
+/** Used for any manifest-based node type that isn't one of the 4 built-ins. */
+export interface GenericNodeData extends Record<string, unknown> {
+	label?: string
+	/** The original manifest type string (e.g. "http-request", "delay"). */
+	nodeType?: string
+}
+
 // ── Union types ───────────────────────────────────────────────────────────────
 
 export type WorkflowNodeType = "trigger" | "agent" | "condition" | "output"
@@ -54,6 +63,7 @@ export type WorkflowNode =
 	| Node<AgentNodeData, "agent">
 	| Node<ConditionNodeData, "condition">
 	| Node<OutputNodeData, "output">
+	| Node<GenericNodeData, "generic">
 
 export type WorkflowEdge = Edge
 

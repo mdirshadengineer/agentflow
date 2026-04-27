@@ -143,6 +143,7 @@ function EditorInner({
 					<NodeConfigPanel
 						node={editor.selectedNode}
 						onUpdate={(data) => editor.updateNodeData(editor.selectedNodeId!, data)}
+						allNodes={editor.nodes}
 					/>
 				)}
 			</div>

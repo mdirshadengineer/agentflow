@@ -12,7 +12,8 @@ import { TriggerNode } from "./nodes/TriggerNode"
 import { AgentNode } from "./nodes/AgentNode"
 import { ConditionNode } from "./nodes/ConditionNode"
 import { OutputNode } from "./nodes/OutputNode"
-import type { WorkflowNode, WorkflowEdge, WorkflowNodeType } from "@/types/workflow"
+import { GenericNode } from "./nodes/GenericNode"
+import type { WorkflowNode, WorkflowEdge } from "@/types/workflow"
 import type { EdgeChange, NodeChange, Connection } from "@xyflow/react"
 
 const NODE_TYPES = {
@@ -20,6 +21,7 @@ const NODE_TYPES = {
 	agent: AgentNode,
 	condition: ConditionNode,
 	output: OutputNode,
+	generic: GenericNode,
 } as const
 
 interface WorkflowCanvasProps {
@@ -30,7 +32,7 @@ interface WorkflowCanvasProps {
 	onConnect: (connection: Connection) => void
 	onNodeClick: (nodeId: string) => void
 	onPaneClick: () => void
-	onAddNode: (type: WorkflowNodeType, position: { x: number; y: number }) => void
+	onAddNode: (type: string, position: { x: number; y: number }) => void
 }
 
 export function WorkflowCanvas({
@@ -63,7 +65,7 @@ export function WorkflowCanvas({
 			event.preventDefault()
 			const nodeType = event.dataTransfer.getData(
 				"application/agentflow-node-type",
-			) as WorkflowNodeType
+			)
 			if (!nodeType || !rfInstance) return
 			const position = rfInstance.screenToFlowPosition({
 				x: event.clientX,
