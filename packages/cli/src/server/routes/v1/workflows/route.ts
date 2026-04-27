@@ -279,4 +279,126 @@ export default async function workflowsRoutes(fastify: FastifyInstance) {
 			return reply.send({ ...serializeRun(run), steps });
 		},
 	);
+
+	// POST /api/v1/workflows/:id/ai-generate — generate a WorkflowDefinition from a prompt
+	// Currently only the "openai" provider is supported; the `provider` field is
+	// accepted for forward-compatibility and ignored when it is absent or "openai".
+	fastify.post<{
+		Params: { id: string };
+		Body: { prompt: string; provider?: string; model?: string };
+	}>(
+		"/:id/ai-generate",
+		{ preHandler: requireAuth },
+		async (request, reply) => {
+			const { userId } = request.user as JWTPayload;
+			const { id } = request.params;
+			const { prompt, provider, model } = request.body;
+
+			if (provider && provider !== "openai") {
+				return reply.code(400).send({
+					error: `Unsupported provider "${provider}". Only "openai" is currently supported.`,
+				});
+			}
+
+			if (!prompt || typeof prompt !== "string" || !prompt.trim()) {
+				return reply.code(400).send({ error: "prompt is required" });
+			}
+
+			const db = getDb();
+			const workflow = db
+				.select()
+				.from(workflows)
+				.where(and(eq(workflows.id, id), eq(workflows.ownerId, userId)))
+				.get();
+
+			if (!workflow) {
+				return reply.code(404).send({ error: "Workflow not found" });
+			}
+
+			const apiKey = process.env.OPENAI_API_KEY;
+			if (!apiKey) {
+				return reply.code(503).send({
+					error:
+						"AI generation is not configured. Set the OPENAI_API_KEY environment variable to enable this feature.",
+				});
+			}
+
+			const systemPrompt = `You are an AI assistant that converts natural-language workflow descriptions into structured JSON workflow definitions for an agent automation platform.
+
+A workflow definition has this exact shape:
+{
+  "nodes": WorkflowNode[],
+  "edges": WorkflowEdge[]
+}
+
+Each WorkflowNode is one of:
+- { "id": string, "type": "trigger", "position": { "x": number, "y": number }, "data": { "label": string, "triggerType": "manual" | "scheduled" | "webhook", "cron"?: string, "webhookPath"?: string } }
+- { "id": string, "type": "agent",   "position": { "x": number, "y": number }, "data": { "label": string, "agentId": string, "agentName"?: string, "prompt"?: string } }
+- { "id": string, "type": "condition","position": { "x": number, "y": number }, "data": { "label": string, "condition": string } }
+- { "id": string, "type": "output",  "position": { "x": number, "y": number }, "data": { "label": string, "outputKey"?: string } }
+
+Each WorkflowEdge is: { "id": string, "source": string, "target": string }
+
+Rules:
+- Use sequential x positions (e.g. 100, 350, 600…) and y=200 for a linear flow; branch nodes may vary y.
+- Every workflow must start with exactly one trigger node.
+- "agentId" for agent nodes must be an empty string "" (the user will pick a real agent in the UI).
+- The "condition" field is a JavaScript expression evaluated against { output }.
+- Respond ONLY with valid JSON — no markdown, no explanation.`;
+
+			let definition: unknown;
+			try {
+				const response = await fetch(
+					"https://api.openai.com/v1/chat/completions",
+					{
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+							Authorization: `Bearer ${apiKey}`,
+						},
+						body: JSON.stringify({
+							model: model ?? "gpt-4o-mini",
+							messages: [
+								{ role: "system", content: systemPrompt },
+								{ role: "user", content: prompt.trim() },
+							],
+							response_format: { type: "json_object" },
+							temperature: 0.3,
+						}),
+					},
+				);
+
+				if (!response.ok) {
+					const errBody = (await response.json().catch(() => null)) as {
+						error?: { message?: string } | string;
+						message?: string;
+					} | null;
+					let msg = `OpenAI API error: ${response.status}`;
+					if (errBody) {
+						if (typeof errBody.error === "string") {
+							msg = errBody.error;
+						} else if (typeof errBody.error?.message === "string") {
+							msg = errBody.error.message;
+						} else if (typeof errBody.message === "string") {
+							msg = errBody.message;
+						}
+					}
+					return reply.code(502).send({ error: msg });
+				}
+
+				const completion = (await response.json()) as {
+					choices: Array<{ message: { content: string } }>;
+				};
+				const content = completion.choices[0]?.message?.content ?? "{}";
+				definition = JSON.parse(content);
+			} catch (err) {
+				fastify.log.error(err, "ai-generate: failed to call OpenAI");
+				return reply
+					.code(502)
+					.send({ error: "Failed to contact AI provider. Please try again." });
+			}
+
+			return reply.send(definition);
+		},
+	);
 }

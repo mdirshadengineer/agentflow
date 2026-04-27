@@ -18,6 +18,7 @@ import { Route as AuthenticatedAgentsRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedAgentsAgentIdRouteImport } from './routes/_authenticated/agents_.$agentId'
 import { Route as AuthenticatedWorkflowsRouteImport } from './routes/_authenticated/workflows'
 import { Route as AuthenticatedWorkflowsWorkflowIdRunsRouteImport } from './routes/_authenticated/workflows_.$workflowId.runs'
+import { Route as AuthenticatedWorkflowsWorkflowIdEditRouteImport } from './routes/_authenticated/workflows_.$workflowId.edit'
 import { Route as AuthenticatedRunsRunIdRouteImport } from './routes/_authenticated/runs_.$runId'
 
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
@@ -64,6 +65,11 @@ const AuthenticatedWorkflowsWorkflowIdRunsRoute = AuthenticatedWorkflowsWorkflow
   path: '/workflows/$workflowId/runs',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedWorkflowsWorkflowIdEditRoute = AuthenticatedWorkflowsWorkflowIdEditRouteImport.update({
+  id: '/workflows/$workflowId/edit',
+  path: '/workflows/$workflowId/edit',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedRunsRunIdRoute = AuthenticatedRunsRunIdRouteImport.update({
   id: '/runs/$runId',
   path: '/runs/$runId',
@@ -79,6 +85,7 @@ export interface FileRoutesByFullPath {
   '/agents/$agentId': typeof AuthenticatedAgentsAgentIdRoute
   '/workflows': typeof AuthenticatedWorkflowsRoute
   '/workflows/$workflowId/runs': typeof AuthenticatedWorkflowsWorkflowIdRunsRoute
+  '/workflows/$workflowId/edit': typeof AuthenticatedWorkflowsWorkflowIdEditRoute
   '/runs/$runId': typeof AuthenticatedRunsRunIdRoute
 }
 export interface FileRoutesByTo {
@@ -90,6 +97,7 @@ export interface FileRoutesByTo {
   '/agents/$agentId': typeof AuthenticatedAgentsAgentIdRoute
   '/workflows': typeof AuthenticatedWorkflowsRoute
   '/workflows/$workflowId/runs': typeof AuthenticatedWorkflowsWorkflowIdRunsRoute
+  '/workflows/$workflowId/edit': typeof AuthenticatedWorkflowsWorkflowIdEditRoute
   '/runs/$runId': typeof AuthenticatedRunsRunIdRoute
 }
 export interface FileRoutesById {
@@ -103,6 +111,7 @@ export interface FileRoutesById {
   '/_authenticated/agents/$agentId': typeof AuthenticatedAgentsAgentIdRoute
   '/_authenticated/workflows': typeof AuthenticatedWorkflowsRoute
   '/_authenticated/workflows/$workflowId/runs': typeof AuthenticatedWorkflowsWorkflowIdRunsRoute
+  '/_authenticated/workflows/$workflowId/edit': typeof AuthenticatedWorkflowsWorkflowIdEditRoute
   '/_authenticated/runs/$runId': typeof AuthenticatedRunsRunIdRoute
 }
 export interface FileRouteTypes {
@@ -116,6 +125,7 @@ export interface FileRouteTypes {
     | '/agents/$agentId'
     | '/workflows'
     | '/workflows/$workflowId/runs'
+    | '/workflows/$workflowId/edit'
     | '/runs/$runId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -127,6 +137,7 @@ export interface FileRouteTypes {
     | '/agents/$agentId'
     | '/workflows'
     | '/workflows/$workflowId/runs'
+    | '/workflows/$workflowId/edit'
     | '/runs/$runId'
   id:
     | '__root__'
@@ -139,6 +150,7 @@ export interface FileRouteTypes {
     | '/_authenticated/agents/$agentId'
     | '/_authenticated/workflows'
     | '/_authenticated/workflows/$workflowId/runs'
+    | '/_authenticated/workflows/$workflowId/edit'
     | '/_authenticated/runs/$runId'
   fileRoutesById: FileRoutesById
 }
@@ -155,6 +167,7 @@ export interface AuthenticatedRouteChildren {
   AuthenticatedAgentsAgentIdRoute: typeof AuthenticatedAgentsAgentIdRoute
   AuthenticatedWorkflowsRoute: typeof AuthenticatedWorkflowsRoute
   AuthenticatedWorkflowsWorkflowIdRunsRoute: typeof AuthenticatedWorkflowsWorkflowIdRunsRoute
+  AuthenticatedWorkflowsWorkflowIdEditRoute: typeof AuthenticatedWorkflowsWorkflowIdEditRoute
   AuthenticatedRunsRunIdRoute: typeof AuthenticatedRunsRunIdRoute
 }
 
@@ -223,6 +236,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWorkflowsWorkflowIdRunsRouteImport
       parentRoute: typeof AuthenticatedRouteImport
     }
+    '/_authenticated/workflows/$workflowId/edit': {
+      id: '/_authenticated/workflows/$workflowId/edit'
+      path: '/workflows/$workflowId/edit'
+      fullPath: '/workflows/$workflowId/edit'
+      preLoaderRoute: typeof AuthenticatedWorkflowsWorkflowIdEditRouteImport
+      parentRoute: typeof AuthenticatedRouteImport
+    }
     '/_authenticated/runs/$runId': {
       id: '/_authenticated/runs/$runId'
       path: '/runs/$runId'
@@ -239,6 +259,7 @@ const authenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAgentsAgentIdRoute: AuthenticatedAgentsAgentIdRoute,
   AuthenticatedWorkflowsRoute: AuthenticatedWorkflowsRoute,
   AuthenticatedWorkflowsWorkflowIdRunsRoute: AuthenticatedWorkflowsWorkflowIdRunsRoute,
+  AuthenticatedWorkflowsWorkflowIdEditRoute: AuthenticatedWorkflowsWorkflowIdEditRoute,
   AuthenticatedRunsRunIdRoute: AuthenticatedRunsRunIdRoute,
 }
 
