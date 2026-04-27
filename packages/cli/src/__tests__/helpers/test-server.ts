@@ -10,7 +10,10 @@ import fastifyJwt from "@fastify/jwt";
 import { fastify } from "fastify";
 import agentsRoutes from "../../server/routes/v1/agents/route.js";
 import authRoutes from "../../server/routes/v1/auth/route.js";
+import nodesRoutes from "../../server/routes/v1/nodes/route.js";
 import runsRoutes from "../../server/routes/v1/runs/route.js";
+import toolsRoutes from "../../server/routes/v1/tools/route.js";
+import webhooksRoutes from "../../server/routes/v1/webhooks/route.js";
 import workflowsRoutes from "../../server/routes/v1/workflows/route.js";
 
 export const TEST_JWT_SECRET = "test-jwt-secret-for-integration-tests";
@@ -28,6 +31,9 @@ export async function buildTestServer() {
 	app.register(agentsRoutes, { prefix: "/api/v1/agents" });
 	app.register(workflowsRoutes, { prefix: "/api/v1/workflows" });
 	app.register(runsRoutes, { prefix: "/api/v1/runs" });
+	app.register(nodesRoutes, { prefix: "/api/v1/nodes" });
+	app.register(toolsRoutes, { prefix: "/api/v1/tools" });
+	app.register(webhooksRoutes, { prefix: "/api/v1/webhooks" });
 	app.get("/health", async () => ({ status: "ok" }));
 
 	await app.ready();

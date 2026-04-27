@@ -48,4 +48,51 @@ export function runMigrations() {
 		finished_at INTEGER,
 		FOREIGN KEY (run_id) REFERENCES workflow_runs(id) ON DELETE CASCADE
 	)`);
+
+	// Add new columns to agents (idempotent — ignore if already present)
+	for (const ddl of [
+		`ALTER TABLE agents ADD COLUMN llm_provider TEXT`,
+		`ALTER TABLE agents ADD COLUMN llm_model TEXT`,
+		`ALTER TABLE agents ADD COLUMN system_prompt TEXT`,
+		`ALTER TABLE agents ADD COLUMN tools TEXT`,
+	]) {
+		try {
+			db.run(sql.raw(ddl));
+		} catch (err) {
+			// SQLite raises an error when a column already exists; ignore only that case
+			if (
+				!(err instanceof Error) ||
+				!err.message.includes("duplicate column name")
+			) {
+				throw err;
+			}
+		}
+	}
+
+	db.run(sql`CREATE TABLE IF NOT EXISTS node_executions (
+		id TEXT PRIMARY KEY,
+		run_id TEXT NOT NULL,
+		node_id TEXT NOT NULL,
+		step_name TEXT NOT NULL,
+		node_type TEXT NOT NULL,
+		status TEXT NOT NULL,
+		input_data TEXT,
+		output_data TEXT,
+		logs TEXT,
+		started_at INTEGER,
+		finished_at INTEGER,
+		FOREIGN KEY (run_id) REFERENCES workflow_runs(id) ON DELETE CASCADE
+	)`);
+
+	db.run(sql`CREATE TABLE IF NOT EXISTS agent_sessions (
+		id TEXT PRIMARY KEY,
+		agent_id TEXT NOT NULL,
+		workflow_run_id TEXT,
+		messages TEXT NOT NULL DEFAULT '[]',
+		status TEXT NOT NULL,
+		created_at INTEGER NOT NULL DEFAULT (unixepoch('now') * 1000),
+		updated_at INTEGER NOT NULL DEFAULT (unixepoch('now') * 1000),
+		FOREIGN KEY (agent_id) REFERENCES agents(id) ON DELETE CASCADE,
+		FOREIGN KEY (workflow_run_id) REFERENCES workflow_runs(id) ON DELETE SET NULL
+	)`);
 }

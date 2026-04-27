@@ -1,3 +1,10 @@
+// ── Build DAG ─────────────────────────────────────────────────────────────────
+export type {
+	CanvasEdge,
+	CanvasNode,
+	CanvasWorkflowDefinition,
+} from "./build-dag.js";
+export { buildDag } from "./build-dag.js";
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 // ── LLM providers ─────────────────────────────────────────────────────────────

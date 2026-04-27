@@ -1,8 +1,9 @@
-import type { WorkflowDefinition } from "@mdirshadengineer/agentflow-core";
 import {
+	buildDag,
 	defaultNodeRegistry,
 	WorkflowExecutor,
 } from "@mdirshadengineer/agentflow-core";
+import { registerAll } from "@mdirshadengineer/agentflow-nodes";
 import { eq } from "drizzle-orm";
 import { getDb, workflows } from "../db/index.js";
 import { POLL_INTERVAL_MS } from "../global.config.js";
@@ -13,6 +14,9 @@ export type {
 	WorkflowDefinition,
 	WorkflowStep,
 } from "@mdirshadengineer/agentflow-core";
+
+// Register all built-in node executors once at module load time
+registerAll(defaultNodeRegistry);
 
 // ── Worker service ────────────────────────────────────────────────────────────
 
@@ -50,15 +54,17 @@ function createWorker() {
 			return;
 		}
 
-		let definition: WorkflowDefinition = {};
+		let rawDefinition: unknown = {};
 		try {
-			definition = JSON.parse(workflow.definition) as WorkflowDefinition;
+			rawDefinition = JSON.parse(workflow.definition);
 		} catch {
 			await queue.markDone(runId, "failed", {
 				error: `Workflow ${workflowId} has an invalid definition (not valid JSON)`,
 			});
 			return;
 		}
+
+		const definition = buildDag(rawDefinition);
 
 		try {
 			const finalStatus = await executor.run(runId, workflowId, definition);
