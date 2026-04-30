@@ -11,20 +11,31 @@
 			},
 			"method": {
 				"type": "string",
-				"description": "HTTP method (GET, POST, PUT, PATCH, DELETE).",
-				"default": "GET"
+				"description": "HTTP method.",
+				"default": "GET",
+				"enum": [
+					"GET",
+					"POST",
+					"PUT",
+					"PATCH",
+					"DELETE"
+				]
 			},
 			"headers": {
 				"type": "object",
 				"description": "HTTP headers as key-value string pairs.",
-				"additionalProperties": { "type": "string" }
+				"additionalProperties": {
+					"type": "string"
+				}
 			},
 			"body": {
 				"type": "string",
 				"description": "Raw request body (for POST / PUT / PATCH requests)."
 			}
 		},
-		"required": ["url"]
+		"required": [
+			"url"
+		]
 	},
 	"outputSchema": {
 		"type": "object",

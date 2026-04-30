@@ -12,7 +12,7 @@ import {
 import { useCallback, useState } from "react"
 import "@xyflow/react/dist/style.css"
 import type { Connection, EdgeChange, EdgeProps, NodeChange } from "@xyflow/react"
-import { LayoutTemplateIcon } from "lucide-react"
+import { AlertTriangleIcon, LayoutTemplateIcon, ZapIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { WorkflowEdge, WorkflowNode } from "@/types/workflow"
 import { AgentNode } from "./nodes/AgentNode"
