@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import { Skeleton } from "@/components/ui/skeleton"
 import { AiGeneratePanel } from "@/components/workflow-editor/AiGeneratePanel"
-import { NodeConfigPanel } from "@/components/workflow-editor/NodeConfigPanel"
+import { NodeConfigModal } from "@/components/workflow-editor/NodeConfigModal"
 import { NodeLibrary } from "@/components/workflow-editor/NodeLibrary"
 import { RunTerminalPanel } from "@/components/workflow-editor/RunTerminalPanel"
 import { WorkflowCanvas } from "@/components/workflow-editor/WorkflowCanvas"
@@ -185,18 +185,18 @@ function EditorInner({
 					)}
 				</div>
 
-				{editor.selectedNode && (
-					<NodeConfigPanel
-						node={editor.selectedNode}
-						onUpdate={(data) =>
-							editor.updateNodeData(editor.selectedNodeId!, data)
-						}
-						onClose={() => editor.setSelectedNodeId(null)}
-						onDelete={(id) => editor.deleteNode(id)}
-						allNodes={editor.nodes}
-						workflowId={workflowId}
-					/>
-				)}
+				<NodeConfigModal
+					node={editor.selectedNode}
+					open={editor.selectedNode !== null}
+					onUpdate={(data) =>
+						editor.updateNodeData(editor.selectedNodeId!, data)
+					}
+					onClose={() => editor.setSelectedNodeId(null)}
+					onDelete={(id) => editor.deleteNode(id)}
+					allNodes={editor.nodes}
+					edges={editor.edges}
+					workflowId={workflowId}
+				/>
 			</div>
 
 			<AiGeneratePanel
