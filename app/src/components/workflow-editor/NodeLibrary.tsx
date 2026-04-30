@@ -1,3 +1,4 @@
+import { useReactFlow } from "@xyflow/react"
 import {
 	BotIcon,
 	BoxIcon,
@@ -16,7 +17,6 @@ import {
 	ZapIcon,
 } from "lucide-react"
 import { type DragEvent, useEffect, useState } from "react"
-import { useReactFlow } from "@xyflow/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -133,7 +133,11 @@ interface NodeLibraryProps {
 	canvasRef?: React.RefObject<HTMLElement | null>
 }
 
-export function NodeLibrary({ className, onAddNode, canvasRef }: NodeLibraryProps) {
+export function NodeLibrary({
+	className,
+	onAddNode,
+	canvasRef,
+}: NodeLibraryProps) {
 	const [nodes, setNodes] = useState<NodeTypeConfig[] | null>(null)
 	const [fetchError, setFetchError] = useState(false)
 	const [search, setSearch] = useState("")
@@ -150,7 +154,7 @@ export function NodeLibrary({ className, onAddNode, canvasRef }: NodeLibraryProp
 						description: m.description,
 						icon: iconForType(m.type),
 						colorClass: colorForType(m.type),
-					})),
+					}))
 				)
 			})
 			.catch(() => {
@@ -180,7 +184,7 @@ export function NodeLibrary({ className, onAddNode, canvasRef }: NodeLibraryProp
 		? displayNodes.filter(
 				(n) =>
 					n.label.toLowerCase().includes(search.toLowerCase()) ||
-					n.description.toLowerCase().includes(search.toLowerCase()),
+					n.description.toLowerCase().includes(search.toLowerCase())
 			)
 		: displayNodes
 
@@ -207,7 +211,7 @@ export function NodeLibrary({ className, onAddNode, canvasRef }: NodeLibraryProp
 						className={cn(
 							"size-7 flex items-center justify-center rounded border",
 							"cursor-grab active:cursor-grabbing hover:bg-accent transition-colors",
-							colorClass,
+							colorClass
 						)}
 					>
 						<Icon className="size-3.5" />
@@ -221,7 +225,7 @@ export function NodeLibrary({ className, onAddNode, canvasRef }: NodeLibraryProp
 		<aside
 			className={cn(
 				"flex flex-col gap-2 w-52 shrink-0 border-r bg-background p-3 overflow-y-auto",
-				className,
+				className
 			)}
 		>
 			<div className="flex items-center justify-between mb-1">
@@ -274,7 +278,7 @@ export function NodeLibrary({ className, onAddNode, canvasRef }: NodeLibraryProp
 							className={cn(
 								"flex items-start gap-2 rounded-lg border p-2.5 cursor-grab active:cursor-grabbing select-none",
 								"hover:bg-accent transition-colors",
-								colorClass,
+								colorClass
 							)}
 						>
 							<Icon className="size-3.5 shrink-0 mt-0.5" />
@@ -285,7 +289,7 @@ export function NodeLibrary({ className, onAddNode, canvasRef }: NodeLibraryProp
 								</p>
 							</div>
 						</div>
-					),
+					)
 				)
 			)}
 			{fetchError && (
