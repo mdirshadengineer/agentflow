@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { AiGeneratePanel } from "@/components/workflow-editor/AiGeneratePanel"
 import { NodeConfigPanel } from "@/components/workflow-editor/NodeConfigPanel"
 import { NodeLibrary } from "@/components/workflow-editor/NodeLibrary"
+import { RunTerminalPanel } from "@/components/workflow-editor/RunTerminalPanel"
 import { WorkflowCanvas } from "@/components/workflow-editor/WorkflowCanvas"
 import { WorkflowEditorToolbar } from "@/components/workflow-editor/WorkflowEditorToolbar"
 import { useWorkflowEditor } from "@/hooks/use-workflow-editor"
@@ -22,7 +23,6 @@ const EMPTY_DEFINITION: WorkflowDefinition = { nodes: [], edges: [] }
 
 function WorkflowEditorPage() {
 	const { workflowId } = Route.useParams()
-	const navigate = useNavigate()
 	const [initialDefinition, setInitialDefinition] =
 		useState<WorkflowDefinition | null>(null)
 	const [initialName, setInitialName] = useState<string | null>(null)
@@ -64,9 +64,6 @@ function WorkflowEditorPage() {
 				workflowId={workflowId}
 				initialName={initialName}
 				initialDefinition={initialDefinition}
-				onRunNavigate={(runId) =>
-					void navigate({ to: "/runs/$runId", params: { runId } })
-				}
 			/>
 		</ReactFlowProvider>
 	)
@@ -76,12 +73,10 @@ function EditorInner({
 	workflowId,
 	initialName,
 	initialDefinition,
-	onRunNavigate,
 }: {
 	workflowId: string
 	initialName: string
 	initialDefinition: WorkflowDefinition
-	onRunNavigate: (runId: string) => void
 }) {
 	const editor = useWorkflowEditor({
 		workflowId,
@@ -90,6 +85,7 @@ function EditorInner({
 	})
 
 	const [showMiniMap, setShowMiniMap] = useState(true)
+	const [activeRunId, setActiveRunId] = useState<string | null>(null)
 	const { fitView } = useReactFlow()
 	// Ref to the canvas wrapper div — shared with NodeLibrary for click-to-add centering
 	const canvasRef = useRef<HTMLDivElement>(null)
@@ -125,7 +121,7 @@ function EditorInner({
 		try {
 			const run = await triggerRun(workflowId)
 			toast.success(`Run started: ${run.id.slice(0, 8)}`)
-			onRunNavigate(run.id)
+			setActiveRunId(run.id)
 		} catch (err) {
 			toast.error(err instanceof Error ? err.message : "Failed to start run")
 		}
@@ -159,7 +155,7 @@ function EditorInner({
 			<div className="flex flex-1 overflow-hidden">
 				<NodeLibrary onAddNode={editor.addNode} canvasRef={canvasRef} />
 
-				<div ref={canvasRef} className="flex-1 overflow-hidden">
+				<div ref={canvasRef} className="flex flex-1 flex-col overflow-hidden">
 					<WorkflowCanvas
 						nodes={editor.nodes}
 						edges={editor.edges}
@@ -178,6 +174,14 @@ function EditorInner({
 						onAddNode={editor.addNode}
 						onLoadTemplate={editor.loadTemplate}
 					/>
+
+					{/* Embedded run terminal — slides in when a run is active */}
+					{activeRunId && (
+						<RunTerminalPanel
+							runId={activeRunId}
+							onClose={() => setActiveRunId(null)}
+						/>
+					)}
 				</div>
 
 				{editor.selectedNode && (
@@ -189,6 +193,7 @@ function EditorInner({
 						onClose={() => editor.setSelectedNodeId(null)}
 						onDelete={(id) => editor.deleteNode(id)}
 						allNodes={editor.nodes}
+						workflowId={workflowId}
 					/>
 				)}
 			</div>

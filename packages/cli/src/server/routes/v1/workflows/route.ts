@@ -1,4 +1,6 @@
 import { randomUUID } from "node:crypto";
+import { defaultNodeRegistry } from "@mdirshadengineer/agentflow-core";
+import { registerAll } from "@mdirshadengineer/agentflow-nodes";
 import { and, eq } from "drizzle-orm";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import {
@@ -7,8 +9,20 @@ import {
 	workflowRuns,
 	workflows,
 } from "../../../../db/index.js";
-import { requireAuth } from "../../../middleware/auth.js";
 import { SqliteWorkflowQueue } from "../../../../services/sqlite-workflow-queue.js";
+import { requireAuth } from "../../../middleware/auth.js";
+
+// Ensure all built-in node executors are registered.
+// registerAll throws if any executor type is already registered (e.g., because
+// worker.ts imported and registered them first). We only suppress that specific
+// duplicate-registration scenario; any other error is re-thrown.
+try {
+	registerAll(defaultNodeRegistry);
+} catch (err) {
+	if (!(err instanceof Error && err.message.includes("already registered"))) {
+		throw err;
+	}
+}
 
 /** Polling interval for SSE log streams, in milliseconds. */
 const SSE_POLL_INTERVAL_MS = 500;
@@ -517,4 +531,50 @@ Rules:
 			return reply.send(definition);
 		},
 	);
+
+	// POST /api/v1/workflows/:id/test-node — execute a single node synchronously
+	// for rapid "test step" feedback in the workflow editor
+	fastify.post<{
+		Params: { id: string };
+		Body: { nodeType: string; config?: Record<string, unknown> };
+	}>("/:id/test-node", { preHandler: requireAuth }, async (request, reply) => {
+		const { userId } = request.user as JWTPayload;
+		const { id } = request.params;
+		const { nodeType, config = {} } = request.body;
+
+		if (!nodeType || typeof nodeType !== "string") {
+			return reply.code(400).send({ error: "nodeType is required" });
+		}
+
+		const db = getDb();
+		const workflow = db
+			.select()
+			.from(workflows)
+			.where(and(eq(workflows.id, id), eq(workflows.ownerId, userId)))
+			.get();
+
+		if (!workflow) {
+			return reply.code(404).send({ error: "Workflow not found" });
+		}
+
+		const syntheticRunId = `test-${randomUUID()}`;
+		try {
+			const output = await defaultNodeRegistry.execute(
+				nodeType,
+				{
+					data: config,
+					previousOutputs: {},
+					runId: syntheticRunId,
+					workflowId: id,
+				},
+				{ runId: syntheticRunId, workflowId: id },
+			);
+			return reply.send({ output });
+		} catch (err) {
+			const message = err instanceof Error ? err.message : String(err);
+			return reply.send({
+				output: { status: "failed", data: {}, logs: message },
+			});
+		}
+	});
 }

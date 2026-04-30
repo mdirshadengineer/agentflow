@@ -150,3 +150,46 @@
     @apply font-sans;
     }
 }
+
+/* ── ReactFlow handle redesign ────────────────────────────────────────────── */
+/* Replace plain opaque dots with clean port indicators that match the card  */
+/* design system and provide clear directional affordance.                    */
+
+.react-flow__handle {
+  width: 10px !important;
+  height: 10px !important;
+  border-radius: 50% !important;
+  background-color: var(--background) !important;
+  border: 2px solid color-mix(in oklch, var(--primary) 50%, var(--border)) !important;
+  box-shadow: 0 0 0 2px var(--background) !important;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease !important;
+}
+
+.react-flow__handle:hover {
+  background-color: color-mix(in oklch, var(--primary) 15%, var(--background)) !important;
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--primary) 20%, transparent) !important;
+}
+
+/* Connecting state (dragging an edge onto this handle) */
+.react-flow__handle-connecting {
+  background-color: color-mix(in oklch, var(--primary) 20%, var(--background)) !important;
+  border-color: var(--primary) !important;
+}
+
+/* Valid drop target while dragging */
+.react-flow__handle-valid {
+  background-color: color-mix(in oklch, var(--primary) 25%, var(--background)) !important;
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 4px color-mix(in oklch, var(--primary) 25%, transparent) !important;
+}
+
+/* Source handles (outputs) get a filled dot to visually distinguish from targets */
+.react-flow__handle-source {
+  background-color: color-mix(in oklch, var(--primary) 70%, var(--background)) !important;
+  border-color: var(--primary) !important;
+}
+
+.react-flow__handle-source:hover {
+  background-color: var(--primary) !important;
+}

@@ -1,16 +1,20 @@
 import {
 	BotIcon,
 	BoxIcon,
+	CheckCircle2Icon,
 	ChevronDownIcon,
 	ChevronRightIcon,
 	ChevronRightSquareIcon,
 	FlagIcon,
 	GitBranchIcon,
+	Loader2Icon,
+	PlayIcon,
 	Trash2Icon,
+	XCircleIcon,
 	XIcon,
 	ZapIcon,
 } from "lucide-react"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
 	Collapsible,
@@ -29,7 +33,10 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { type Agent, listAgents } from "@/lib/api/agents"
 import { listNodes, type NodeManifest } from "@/lib/api/nodes"
+import { type NodeTestOutput, testNode } from "@/lib/api/workflows"
+import { cn } from "@/lib/utils"
 import type { WorkflowNode } from "@/types/workflow"
+import { VariableInput } from "./VariableInput"
 
 const NODE_TYPE_ICONS: Record<string, React.ElementType> = {
 	trigger: ZapIcon,
@@ -45,6 +52,7 @@ interface NodeConfigPanelProps {
 	onClose: () => void
 	onDelete: (nodeId: string) => void
 	allNodes?: WorkflowNode[]
+	workflowId?: string
 }
 
 export function NodeConfigPanel({
@@ -53,10 +61,14 @@ export function NodeConfigPanel({
 	onClose,
 	onDelete,
 	allNodes,
+	workflowId,
 }: NodeConfigPanelProps) {
 	const [agents, setAgents] = useState<Agent[]>([])
 	const [manifests, setManifests] = useState<NodeManifest[]>([])
 	const [collapsed, setCollapsed] = useState(false)
+	const [testing, setTesting] = useState(false)
+	const [testResult, setTestResult] = useState<NodeTestOutput | null>(null)
+	const [testResultOpen, setTestResultOpen] = useState(false)
 
 	useEffect(() => {
 		listAgents()
@@ -73,6 +85,12 @@ export function NodeConfigPanel({
 				// Manifests are optional — silently ignore
 			})
 	}, [])
+
+	// Reset test result when node changes
+	useEffect(() => {
+		setTestResult(null)
+		setTestResultOpen(false)
+	}, [node.id])
 
 	// For generic nodes, the actual manifest type is stored in data.nodeType
 	const manifestType =
@@ -93,6 +111,36 @@ export function NodeConfigPanel({
 		node.type.charAt(0).toUpperCase() + node.type.slice(1)
 
 	const TypeIcon = NODE_TYPE_ICONS[node.type] ?? BoxIcon
+
+	// Upstream nodes: all nodes except this one, for variable references
+	const upstreamNodes = (allNodes ?? []).filter((n) => n.id !== node.id)
+
+	const handleTestStep = async () => {
+		if (!workflowId) return
+		setTesting(true)
+		setTestResult(null)
+		try {
+			const nodeType =
+				node.type === "generic"
+					? ((node.data as { nodeType?: string }).nodeType ?? "noop")
+					: node.type
+			const config = { ...node.data } as Record<string, unknown>
+			delete config.label
+			delete config.nodeType
+			const result = await testNode(workflowId, nodeType, config)
+			setTestResult(result)
+			setTestResultOpen(true)
+		} catch (err) {
+			setTestResult({
+				status: "failed",
+				data: {},
+				logs: err instanceof Error ? err.message : String(err),
+			})
+			setTestResultOpen(true)
+		} finally {
+			setTesting(false)
+		}
+	}
 
 	// Collapsed strip view
 	if (collapsed) {
@@ -156,7 +204,12 @@ export function NodeConfigPanel({
 						<TriggerConfig node={node} onUpdate={onUpdate} />
 					)}
 					{node.type === "agent" && (
-						<AgentConfig node={node} agents={agents} onUpdate={onUpdate} />
+						<AgentConfig
+							node={node}
+							agents={agents}
+							onUpdate={onUpdate}
+							upstreamNodes={upstreamNodes}
+						/>
 					)}
 					{node.type === "condition" && (
 						<ConditionConfig
@@ -175,11 +228,75 @@ export function NodeConfigPanel({
 							}
 							data={node.data as Record<string, unknown>}
 							onUpdate={onUpdate}
+							upstreamNodes={upstreamNodes}
 						/>
 					)}
 				</FieldGroup>
 			</div>
-			<div className="p-3 border-t">
+
+			{/* Test step result */}
+			{testResult && (
+				<Collapsible
+					open={testResultOpen}
+					onOpenChange={setTestResultOpen}
+					className="border-t"
+				>
+					<CollapsibleTrigger asChild>
+						<button
+							type="button"
+							className={cn(
+								"flex w-full items-center gap-1.5 px-3 py-2 text-[10px] font-semibold hover:bg-muted transition-colors",
+								testResult.status === "success"
+									? "text-green-600"
+									: "text-red-500"
+							)}
+						>
+							{testResult.status === "success" ? (
+								<CheckCircle2Icon className="size-3 shrink-0" />
+							) : (
+								<XCircleIcon className="size-3 shrink-0" />
+							)}
+							Step output
+							{testResultOpen ? (
+								<ChevronDownIcon className="size-3 ml-auto" />
+							) : (
+								<ChevronRightIcon className="size-3 ml-auto" />
+							)}
+						</button>
+					</CollapsibleTrigger>
+					<CollapsibleContent className="px-3 pb-3">
+						{testResult.logs && (
+							<pre className="text-[10px] text-muted-foreground font-mono whitespace-pre-wrap break-all mb-1">
+								{testResult.logs}
+							</pre>
+						)}
+						{Object.keys(testResult.data).length > 0 && (
+							<pre className="text-[10px] font-mono bg-muted rounded px-2 py-1.5 whitespace-pre-wrap break-all overflow-auto max-h-40">
+								{JSON.stringify(testResult.data, null, 2)}
+							</pre>
+						)}
+					</CollapsibleContent>
+				</Collapsible>
+			)}
+
+			<div className="p-3 border-t flex flex-col gap-2">
+				{/* Test step button — only for generic (non-built-in trigger/output) nodes */}
+				{!isBuiltIn && workflowId && (
+					<Button
+						variant="secondary"
+						size="sm"
+						className="w-full gap-1.5 text-xs"
+						onClick={() => void handleTestStep()}
+						disabled={testing}
+					>
+						{testing ? (
+							<Loader2Icon className="size-3 animate-spin" />
+						) : (
+							<PlayIcon className="size-3" />
+						)}
+						{testing ? "Running…" : "Test step"}
+					</Button>
+				)}
 				<Button
 					variant="destructive"
 					size="sm"
@@ -214,10 +331,12 @@ function SchemaForm({
 	schema,
 	data,
 	onUpdate,
+	upstreamNodes = [],
 }: {
 	schema: NodeManifest["configSchema"]
 	data: Record<string, unknown>
 	onUpdate: (d: Record<string, unknown>) => void
+	upstreamNodes?: WorkflowNode[]
 }) {
 	const entries = Object.entries(schema.properties ?? {})
 	if (entries.length === 0) return null
@@ -329,16 +448,17 @@ function SchemaForm({
 					)
 				}
 
-				// string type
+				// string type — use VariableInput for autocomplete support
 				if (isMultiline(key, prop.description)) {
 					return (
 						<Field key={key}>
 							<FieldLabel>{key}</FieldLabel>
-							<Textarea
+							<VariableInput
 								value={String(value ?? prop.default ?? "")}
-								onChange={(e) => onUpdate({ [key]: e.target.value })}
+								onChange={(v) => onUpdate({ [key]: v })}
+								upstreamNodes={upstreamNodes}
+								multiline
 								rows={4}
-								className="text-xs"
 							/>
 							{prop.description && (
 								<p className="text-[10px] text-muted-foreground">
@@ -352,10 +472,10 @@ function SchemaForm({
 				return (
 					<Field key={key}>
 						<FieldLabel>{key}</FieldLabel>
-						<Input
+						<VariableInput
 							value={String(value ?? prop.default ?? "")}
-							onChange={(e) => onUpdate({ [key]: e.target.value })}
-							className="h-7 text-xs"
+							onChange={(v) => onUpdate({ [key]: v })}
+							upstreamNodes={upstreamNodes}
 						/>
 						{prop.description && (
 							<p className="text-[10px] text-muted-foreground">
@@ -431,10 +551,12 @@ function AgentConfig({
 	node,
 	agents,
 	onUpdate,
+	upstreamNodes = [],
 }: {
 	node: WorkflowNode
 	agents: Agent[]
 	onUpdate: (d: Record<string, unknown>) => void
+	upstreamNodes?: WorkflowNode[]
 }) {
 	const d = node.data as { agentId?: string; prompt?: string }
 	return (
@@ -462,12 +584,13 @@ function AgentConfig({
 			</Field>
 			<Field>
 				<FieldLabel>Prompt Override</FieldLabel>
-				<Textarea
+				<VariableInput
 					value={d.prompt ?? ""}
-					onChange={(e) => onUpdate({ prompt: e.target.value })}
-					placeholder="Optional prompt…"
+					onChange={(v) => onUpdate({ prompt: v })}
+					upstreamNodes={upstreamNodes}
+					multiline
 					rows={4}
-					className="text-xs"
+					placeholder="Optional prompt… Type {{ to reference previous outputs"
 				/>
 			</Field>
 		</>
@@ -484,85 +607,27 @@ function ConditionConfig({
 	allNodes?: WorkflowNode[]
 }) {
 	const d = node.data as { condition?: string }
-	const textareaRef = useRef<HTMLTextAreaElement>(null)
-	const [varsOpen, setVarsOpen] = useState(false)
-
 	const upstreamNodes = (allNodes ?? []).filter((n) => n.id !== node.id)
-
-	const insertVariable = (variable: string) => {
-		const ta = textareaRef.current
-		if (ta) {
-			const start = ta.selectionStart ?? 0
-			const end = ta.selectionEnd ?? 0
-			const current = d.condition ?? ""
-			const updated = current.slice(0, start) + variable + current.slice(end)
-			onUpdate({ condition: updated })
-			// Restore cursor after React re-render
-			requestAnimationFrame(() => {
-				ta.selectionStart = start + variable.length
-				ta.selectionEnd = start + variable.length
-				ta.focus()
-			})
-		} else {
-			const current = d.condition ?? ""
-			onUpdate({ condition: current ? `${current} ${variable}` : variable })
-		}
-	}
 
 	return (
 		<>
 			<Field>
 				<FieldLabel>Condition Expression</FieldLabel>
-				<Textarea
-					ref={textareaRef}
+				<VariableInput
 					value={d.condition ?? ""}
-					onChange={(e) => onUpdate({ condition: e.target.value })}
-					placeholder="output.status === 'approved'"
+					onChange={(v) => onUpdate({ condition: v })}
+					upstreamNodes={upstreamNodes}
+					multiline
 					rows={3}
-					className="text-xs font-mono"
+					placeholder="output.status === 'approved'"
+					className="font-mono"
 				/>
 				<p className="text-[10px] text-muted-foreground">
 					JS expression evaluated against{" "}
 					<code className="font-mono">{"{ output }"}</code>. Returns true/false.
+					Type <code className="font-mono">{"{{"}</code> to insert a variable.
 				</p>
 			</Field>
-
-			{upstreamNodes.length > 0 && (
-				<Collapsible open={varsOpen} onOpenChange={setVarsOpen}>
-					<CollapsibleTrigger asChild>
-						<Button
-							variant="ghost"
-							size="sm"
-							className="h-6 w-full justify-start px-0 text-[10px] text-muted-foreground hover:text-foreground"
-						>
-							{varsOpen ? (
-								<ChevronDownIcon className="size-3 mr-1" />
-							) : (
-								<ChevronRightIcon className="size-3 mr-1" />
-							)}
-							Available variables
-						</Button>
-					</CollapsibleTrigger>
-					<CollapsibleContent className="space-y-1 pt-1">
-						{upstreamNodes.map((n) => {
-							const nodeLabel =
-								(n.data as { label?: string }).label ?? n.id.slice(0, 6)
-							const variable = `{{ steps.${nodeLabel}.output }}`
-							return (
-								<button
-									key={n.id}
-									type="button"
-									onClick={() => insertVariable(variable)}
-									className="block w-full text-left rounded px-2 py-1 text-[10px] font-mono bg-muted hover:bg-accent transition-colors truncate"
-									title={`Insert ${variable}`}
-								>
-									{variable}
-								</button>
-							)
-						})}
-					</CollapsibleContent>
-				</Collapsible>
-			)}
 		</>
 	)
 }

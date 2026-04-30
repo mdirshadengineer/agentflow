@@ -105,3 +105,27 @@ export async function aiGenerateWorkflow(
 	if (!r.ok) await throwOnError(r)
 	return r.json() as Promise<WorkflowDefinition>
 }
+
+export interface NodeTestOutput {
+	status: "success" | "failed"
+	data: Record<string, unknown>
+	logs: string
+}
+
+/**
+ * Execute a single node synchronously for rapid "test step" feedback.
+ */
+export async function testNode(
+	workflowId: string,
+	nodeType: string,
+	config?: Record<string, unknown>
+): Promise<NodeTestOutput> {
+	const r = await fetch(`/api/v1/workflows/${workflowId}/test-node`, {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({ nodeType, config }),
+	})
+	if (!r.ok) await throwOnError(r)
+	const body = (await r.json()) as { output: NodeTestOutput }
+	return body.output
+}
