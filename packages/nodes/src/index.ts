@@ -1,6 +1,7 @@
 // ── Manifest ──────────────────────────────────────────────────────────────────
 
 // ── Executors ─────────────────────────────────────────────────────────────────
+export { codeExecutor } from "./executors/code.js";
 export { delayExecutor } from "./executors/delay.js";
 export { filterExecutor } from "./executors/filter.js";
 export { httpRequestExecutor } from "./executors/http-request.js";

@@ -12,6 +12,7 @@ import {
 	GlobeIcon,
 	LayersIcon,
 	ScrollIcon,
+	ShuffleIcon,
 	WrenchIcon,
 	ZapIcon,
 } from "lucide-react"
@@ -82,11 +83,13 @@ function iconForType(type: string): React.ElementType {
 		case "noop":
 			return CircleIcon
 		case "transform":
-			return WrenchIcon
+			return ShuffleIcon
 		case "json-extract":
-			return CodeIcon
+			return WrenchIcon
 		case "filter":
 			return FilterIcon
+		case "code":
+			return CodeIcon
 		case "subworkflow":
 			return LayersIcon
 		default:
@@ -114,11 +117,13 @@ function colorForType(type: string): string {
 		case "noop":
 			return "text-gray-600 bg-gray-500/10 border-gray-500/30"
 		case "transform":
-			return "text-indigo-600 bg-indigo-500/10 border-indigo-500/30"
-		case "json-extract":
 			return "text-teal-600 bg-teal-500/10 border-teal-500/30"
+		case "json-extract":
+			return "text-indigo-600 bg-indigo-500/10 border-indigo-500/30"
 		case "filter":
 			return "text-rose-600 bg-rose-500/10 border-rose-500/30"
+		case "code":
+			return "text-violet-600 bg-violet-500/10 border-violet-500/30"
 		case "subworkflow":
 			return "text-violet-600 bg-violet-500/10 border-violet-500/30"
 		default:

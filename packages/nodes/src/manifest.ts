@@ -1,5 +1,6 @@
 import type { JsonSchema } from "@mdirshadengineer/agentflow-core";
 
+import codeManifestJson from "./nodes/code.json" with { type: "json" };
 import delayManifestJson from "./nodes/delay.json" with { type: "json" };
 import filterManifestJson from "./nodes/filter.json" with { type: "json" };
 import httpRequestManifestJson from "./nodes/http-request.json" with {
@@ -16,7 +17,6 @@ import subworkflowManifestJson from "./nodes/subworkflow.json" with {
 import transformManifestJson from "./nodes/transform.json" with {
 	type: "json",
 };
-
 /**
  * Static metadata that describes a node type.
  * Each built-in node ships a corresponding JSON file under `src/nodes/`.
@@ -49,6 +49,7 @@ export const allManifests: NodeManifest[] = [
 	transformManifestJson as NodeManifest,
 	jsonExtractManifestJson as NodeManifest,
 	filterManifestJson as NodeManifest,
+	codeManifestJson as NodeManifest,
 	subworkflowManifestJson as NodeManifest,
 ];
 

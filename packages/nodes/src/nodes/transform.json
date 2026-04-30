@@ -20,8 +20,7 @@
 		"type": "object",
 		"properties": {
 			"result": {
-				"type": "string",
-				"description": "The value produced by the expression. The actual runtime type depends on what the expression returns (string, number, boolean, object, array, etc.)."
+				"description": "The value produced by the expression (can be any JSON type)."
 			}
 		}
 	}

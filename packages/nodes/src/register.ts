@@ -1,4 +1,5 @@
 import type { NodeRegistry } from "@mdirshadengineer/agentflow-core";
+import { codeExecutor } from "./executors/code.js";
 import { delayExecutor } from "./executors/delay.js";
 import { filterExecutor } from "./executors/filter.js";
 import { httpRequestExecutor } from "./executors/http-request.js";
@@ -28,5 +29,6 @@ export function registerAll(registry: NodeRegistry): void {
 	registry.register("transform", transformExecutor);
 	registry.register("json-extract", jsonExtractExecutor);
 	registry.register("filter", filterExecutor);
+	registry.register("code", codeExecutor);
 	registry.register("subworkflow", subworkflowExecutor);
 }

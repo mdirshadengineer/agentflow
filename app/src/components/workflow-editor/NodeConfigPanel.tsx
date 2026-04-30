@@ -6,6 +6,7 @@ import {
 	ChevronRightSquareIcon,
 	FlagIcon,
 	GitBranchIcon,
+	LayersIcon,
 	Trash2Icon,
 	XIcon,
 	ZapIcon,
@@ -37,6 +38,7 @@ const NODE_TYPE_ICONS: Record<string, React.ElementType> = {
 	condition: GitBranchIcon,
 	output: FlagIcon,
 	generic: BoxIcon,
+	subworkflow: LayersIcon,
 }
 
 interface NodeConfigPanelProps {

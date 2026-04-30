@@ -37,6 +37,20 @@ export class WorkflowExecutor {
 		workflowId: string,
 		definition: WorkflowDefinition,
 	): Promise<"success" | "failed"> {
+		const { status } = await this.runWithOutputs(runId, workflowId, definition);
+		return status;
+	}
+
+	/**
+	 * Execute a full workflow run and return both the final status and all
+	 * collected step outputs.  Used by the subworkflow executor to expose
+	 * child-step results to the parent workflow.
+	 */
+	async runWithOutputs(
+		runId: string,
+		workflowId: string,
+		definition: WorkflowDefinition,
+	): Promise<{ status: "success" | "failed"; outputs: Map<string, NodeOutput> }> {
 		const steps = definition.steps ?? [];
 		return this.executeDAG(runId, workflowId, steps);
 	}
@@ -47,7 +61,7 @@ export class WorkflowExecutor {
 		runId: string,
 		workflowId: string,
 		steps: WorkflowStep[],
-	): Promise<"success" | "failed"> {
+	): Promise<{ status: "success" | "failed"; outputs: Map<string, NodeOutput> }> {
 		const context: ExecutionContext = { runId, workflowId };
 
 		// Completed and failed step names, plus their accumulated outputs
@@ -138,6 +152,6 @@ export class WorkflowExecutor {
 			);
 		}
 
-		return failed.size === 0 ? "success" : "failed";
+		return { status: failed.size === 0 ? "success" : "failed", outputs };
 	}
 }

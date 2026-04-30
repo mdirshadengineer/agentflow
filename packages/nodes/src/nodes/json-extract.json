@@ -14,8 +14,7 @@
 				"description": "Step name to read from. Defaults to the most recently completed step."
 			},
 			"defaultValue": {
-				"type": "string",
-				"description": "Value returned when the path is not found. Omit to return null."
+				"description": "Value returned when the path is not found. Can be any JSON type. Omit to return null."
 			}
 		},
 		"required": ["path"]
@@ -24,8 +23,7 @@
 		"type": "object",
 		"properties": {
 			"value": {
-				"type": "string",
-				"description": "The extracted value at the given path. The actual runtime type matches the JSON value at that path (string, number, boolean, object, array, or null)."
+				"description": "The extracted value (any JSON type), or the defaultValue when the path is not found."
 			}
 		}
 	}

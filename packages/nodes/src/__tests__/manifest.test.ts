@@ -3,14 +3,24 @@ import { describe, expect, it } from "vitest";
 import { allManifests, getManifest } from "../manifest.js";
 import { registerAll } from "../register.js";
 
-const EXPECTED_TYPES = ["noop", "http-request", "delay", "log", "transform", "json-extract", "filter", "subworkflow"];
+const ALL_TYPES = [
+	"noop",
+	"http-request",
+	"delay",
+	"log",
+	"transform",
+	"json-extract",
+	"filter",
+	"code",
+	"subworkflow",
+];
 
 // ── allManifests ──────────────────────────────────────────────────────────────
 
 describe("allManifests", () => {
 	it("contains exactly the built-in node types", () => {
 		const types = allManifests.map((m) => m.type).sort();
-		expect(types).toEqual([...EXPECTED_TYPES].sort());
+		expect(types).toEqual([...ALL_TYPES].sort());
 	});
 
 	it("every manifest has required fields", () => {
@@ -51,7 +61,7 @@ describe("registerAll", () => {
 	it("registers all built-in types into a NodeRegistry", () => {
 		const registry = new NodeRegistry();
 		registerAll(registry);
-		for (const type of EXPECTED_TYPES) {
+		for (const type of ALL_TYPES) {
 			expect(registry.has(type)).toBe(true);
 		}
 	});

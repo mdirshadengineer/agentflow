@@ -1,0 +1,20 @@
+{
+	"type": "code",
+	"label": "Code",
+	"description": "Runs an inline JavaScript snippet and returns its result. The snippet receives `input` (previous step outputs) and must return a plain object.",
+	"configSchema": {
+		"type": "object",
+		"properties": {
+			"code": {
+				"type": "string",
+				"description": "JavaScript code snippet. Must contain a `return` statement producing a plain object. Has access to `input` (object of all previous step outputs). Example: `return { total: input.items.length, first: input.items[0] }`"
+			}
+		},
+		"required": ["code"]
+	},
+	"outputSchema": {
+		"type": "object",
+		"properties": {},
+		"additionalProperties": true
+	}
+}
