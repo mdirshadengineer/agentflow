@@ -68,8 +68,10 @@ test.describe("Run creation and details", () => {
 		await workflowsPage.createWorkflow(name);
 
 		// Trigger a run and wait for the API response
-		const runPromise = page.waitForResponse((resp) =>
-			resp.url().includes("/run") && resp.request().method() === "POST",
+		const runPromise = page.waitForResponse(
+			(resp) =>
+				resp.url().includes("/run") &&
+				resp.request().method() === "POST",
 		);
 		await workflowsPage.triggerWorkflowRun(name);
 		const runResp = await runPromise;
@@ -131,8 +133,10 @@ test.describe("Run detail page", () => {
 		await workflowsPage.createWorkflow(name);
 
 		// Trigger a run via the API and capture the run ID
-		const runPromise = page.waitForResponse((resp) =>
-			resp.url().includes("/run") && resp.request().method() === "POST",
+		const runPromise = page.waitForResponse(
+			(resp) =>
+				resp.url().includes("/run") &&
+				resp.request().method() === "POST",
 		);
 		await workflowsPage.triggerWorkflowRun(name);
 		const runResp = await runPromise;

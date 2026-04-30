@@ -64,15 +64,14 @@ export default defineConfig({
 	webServer: [
 		{
 			/* Vite UI dev server */
-			command: "cd ../app && pnpm vite --port 5173",
+			command: `cd ${import.meta.dirname}/../app && pnpm vite --port 5173`,
 			url: "http://localhost:5173",
 			reuseExistingServer: !process.env.CI,
 			timeout: 60_000,
 		},
 		{
 			/* Fastify API server (proxies non-API routes to Vite) */
-			command:
-				"cd ../packages/cli && AGENTFLOW_DATA_DIR=/tmp/agentflow-e2e AGENTFLOW_PORT=3000 pnpm exec tsx src/dev/main.ts",
+			command: `cd ${import.meta.dirname}/../packages/cli && pnpm exec tsx src/dev/main.ts`,
 			url: `${BASE_URL}/health`,
 			reuseExistingServer: !process.env.CI,
 			timeout: 60_000,

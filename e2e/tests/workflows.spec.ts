@@ -152,8 +152,10 @@ test.describe("Workflow run trigger", () => {
 		await workflowsPage.createWorkflow(name);
 
 		// Listen for the /run API call
-		const runPromise = page.waitForResponse((resp) =>
-			resp.url().includes("/run") && resp.request().method() === "POST",
+		const runPromise = page.waitForResponse(
+			(resp) =>
+				resp.url().includes("/run") &&
+				resp.request().method() === "POST",
 		);
 		await workflowsPage.triggerWorkflowRun(name);
 		const runResponse = await runPromise;
