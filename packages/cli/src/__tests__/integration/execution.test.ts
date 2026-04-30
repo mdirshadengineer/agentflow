@@ -7,7 +7,7 @@
  * The worker is NOT started with its timer-based polling loop here; instead
  * `worker.poll()` is called directly so tests remain fast and deterministic.
  */
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 vi.mock("../../db/connection.js", async () => {
 	const { default: Database } = await import("better-sqlite3");
@@ -18,7 +18,6 @@ vi.mock("../../db/connection.js", async () => {
 	return { getDb: () => db, getRawSqlite: () => sqlite };
 });
 
-import { vi } from "vitest";
 import { runMigrations } from "../../db/migrate.js";
 import { createWorker } from "../../services/worker.js";
 import { buildTestServer } from "../helpers/test-server.js";
