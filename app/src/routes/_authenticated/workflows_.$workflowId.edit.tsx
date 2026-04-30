@@ -150,6 +150,7 @@ function EditorInner({
 				onSave={() => void editor.save()}
 				onRun={() => void handleRun()}
 				onAiGenerate={() => editor.setAiPanelOpen(true)}
+				validationErrors={editor.validate()}
 			/>
 
 			<div className="flex flex-1 overflow-hidden">
