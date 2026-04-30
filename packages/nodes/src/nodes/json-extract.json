@@ -1,0 +1,32 @@
+{
+	"type": "json-extract",
+	"label": "JSON Extract",
+	"description": "Extracts a nested value from a previous step's output data using a dot-notation path.",
+	"configSchema": {
+		"type": "object",
+		"properties": {
+			"path": {
+				"type": "string",
+				"description": "Dot-notation path into the step output data (e.g. `body.user.name`)."
+			},
+			"fromStep": {
+				"type": "string",
+				"description": "Step name to read from. Defaults to the most recently completed step."
+			},
+			"defaultValue": {
+				"type": "string",
+				"description": "Value returned when the path is not found. Omit to return null."
+			}
+		},
+		"required": ["path"]
+	},
+	"outputSchema": {
+		"type": "object",
+		"properties": {
+			"value": {
+				"type": "string",
+				"description": "The extracted value at the given path. The actual runtime type matches the JSON value at that path (string, number, boolean, object, array, or null)."
+			}
+		}
+	}
+}

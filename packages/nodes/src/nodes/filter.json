@@ -1,0 +1,32 @@
+{
+	"type": "filter",
+	"label": "Filter",
+	"description": "Asserts that a JavaScript condition is truthy. The step fails (blocking downstream steps) when the condition is falsy.",
+	"configSchema": {
+		"type": "object",
+		"properties": {
+			"expression": {
+				"type": "string",
+				"description": "A JavaScript expression evaluated with `output` (previous step data) and `previousOutputs` in scope. The step fails when the expression is falsy."
+			},
+			"fromStep": {
+				"type": "string",
+				"description": "Optional step name whose output is bound to `output`. Defaults to the most recently completed step."
+			},
+			"message": {
+				"type": "string",
+				"description": "Optional failure message shown in the logs when the condition is not met."
+			}
+		},
+		"required": ["expression"]
+	},
+	"outputSchema": {
+		"type": "object",
+		"properties": {
+			"passed": {
+				"type": "boolean",
+				"description": "Always true when the step succeeds (condition was met)."
+			}
+		}
+	}
+}

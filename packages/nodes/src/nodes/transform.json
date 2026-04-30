@@ -1,0 +1,28 @@
+{
+	"type": "transform",
+	"label": "Transform",
+	"description": "Evaluates a JavaScript expression against the previous step's output and returns the result.",
+	"configSchema": {
+		"type": "object",
+		"properties": {
+			"expression": {
+				"type": "string",
+				"description": "A JavaScript expression evaluated with `output` (previous step data) and `previousOutputs` (all prior step outputs) in scope. The expression's return value becomes `result`."
+			},
+			"fromStep": {
+				"type": "string",
+				"description": "Optional step name whose output is bound to `output`. Defaults to the most recently completed step."
+			}
+		},
+		"required": ["expression"]
+	},
+	"outputSchema": {
+		"type": "object",
+		"properties": {
+			"result": {
+				"type": "string",
+				"description": "The value produced by the expression. The actual runtime type depends on what the expression returns (string, number, boolean, object, array, etc.)."
+			}
+		}
+	}
+}
