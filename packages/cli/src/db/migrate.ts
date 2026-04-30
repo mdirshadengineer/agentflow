@@ -123,13 +123,20 @@ export function runMigrations() {
 	// ── Version 2: agent LLM columns ─────────────────────────────────────────
 	if (!isApplied(raw, 2)) {
 		raw.transaction(() => {
-			for (const col of ["llm_provider", "llm_model", "system_prompt", "tools"]) {
+			// Explicit per-column checks — avoids interpolating dynamic strings into SQL.
+			const agentCols: Array<[string, string]> = [
+				["llm_provider", "TEXT"],
+				["llm_model", "TEXT"],
+				["system_prompt", "TEXT"],
+				["tools", "TEXT"],
+			]
+			for (const [col, colType] of agentCols) {
 				if (!columnExists(raw, "agents", col)) {
-					raw.exec(`ALTER TABLE agents ADD COLUMN ${col} TEXT`);
+					raw.exec(`ALTER TABLE agents ADD COLUMN ${col} ${colType}`)
 				}
 			}
-			markApplied(raw, 2);
-		})();
+			markApplied(raw, 2)
+		})()
 	}
 
 	// ── Version 3: node_executions + agent_sessions tables ───────────────────

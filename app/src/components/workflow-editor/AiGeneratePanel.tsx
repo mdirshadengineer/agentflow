@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/sheet"
 import { Textarea } from "@/components/ui/textarea"
 
-const MAX_HISTORY = 5
+const MAX_PROMPT_HISTORY = 5
 
 interface AiGeneratePanelProps {
 	open: boolean
@@ -41,7 +41,7 @@ export function AiGeneratePanel({
 			historyRef.current = [
 				trimmed,
 				...historyRef.current.filter((h) => h !== trimmed),
-			].slice(0, MAX_HISTORY)
+			].slice(0, MAX_PROMPT_HISTORY)
 			onOpenChange(false)
 			// Do NOT clear the prompt so users can iterate
 		} catch (err) {

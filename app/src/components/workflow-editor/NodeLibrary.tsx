@@ -243,7 +243,10 @@ export function NodeLibrary({ className, onAddNode, canvasRef }: NodeLibraryProp
 							onDragStart={(e) => onDragStart(e, type)}
 							onClick={() => handleClick(type)}
 							onKeyDown={(e) => {
-								if (e.key === "Enter" || e.key === " ") handleClick(type)
+								if (e.key === "Enter" || e.key === " ") {
+									e.preventDefault()
+									handleClick(type)
+								}
 							}}
 							role="button"
 							tabIndex={0}
