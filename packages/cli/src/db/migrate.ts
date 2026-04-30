@@ -175,9 +175,17 @@ export function runMigrations() {
 	if (!isApplied(raw, 4)) {
 		raw.transaction(() => {
 			if (!columnExists(raw, "workflow_runs", "created_at")) {
+				// SQLite forbids non-constant expressions (e.g. function calls) as
+				// DEFAULT values in ALTER TABLE ADD COLUMN.  Add the column without a
+				// default and then back-fill any existing rows with the current time.
 				raw.exec(
-					"ALTER TABLE workflow_runs ADD COLUMN created_at INTEGER NOT NULL DEFAULT (unixepoch('now') * 1000)",
+					"ALTER TABLE workflow_runs ADD COLUMN created_at INTEGER",
 				);
+				raw
+					.prepare(
+						"UPDATE workflow_runs SET created_at = ? WHERE created_at IS NULL",
+					)
+					.run(Date.now());
 			}
 			markApplied(raw, 4);
 		})();
