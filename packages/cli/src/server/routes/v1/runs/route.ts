@@ -19,10 +19,27 @@ function parseJson(raw: string | null | undefined): unknown {
 	}
 }
 
+/** Coerce a Date | number | null to epoch-ms number | null for JSON transport. */
+function toEpochMs(val: Date | number | null | undefined): number | null {
+	if (val === null || val === undefined) return null;
+	if (val instanceof Date) return val.getTime();
+	return val;
+}
+
 function serializeRun(row: typeof workflowRuns.$inferSelect) {
 	return {
 		...row,
+		startedAt: toEpochMs(row.startedAt),
+		finishedAt: toEpochMs(row.finishedAt),
 		output: parseJson(row.output),
+	};
+}
+
+function serializeStep(row: typeof workflowRunSteps.$inferSelect) {
+	return {
+		...row,
+		startedAt: toEpochMs(row.startedAt),
+		finishedAt: toEpochMs(row.finishedAt),
 	};
 }
 
@@ -88,7 +105,7 @@ export default async function runsRoutes(fastify: FastifyInstance) {
 				.where(eq(workflowRunSteps.runId, id))
 				.all();
 
-			return reply.send({ ...serializeRun(run), steps });
+			return reply.send({ ...serializeRun(run), steps: steps.map(serializeStep) });
 		},
 	);
 
@@ -140,7 +157,7 @@ export default async function runsRoutes(fastify: FastifyInstance) {
 				.from(workflowRunSteps)
 				.where(eq(workflowRunSteps.runId, id))
 				.all();
-			send("snapshot", { run: serializeRun(run), steps: initialSteps });
+			send("snapshot", { run: serializeRun(run), steps: initialSteps.map(serializeStep) });
 
 			// If already in a terminal state, close immediately
 			if (run.status === "success" || run.status === "failed") {
@@ -190,7 +207,7 @@ export default async function runsRoutes(fastify: FastifyInstance) {
 						.where(eq(workflowRunSteps.runId, id))
 						.all();
 
-					send("update", { run: serializeRun(currentRun), steps });
+					send("update", { run: serializeRun(currentRun), steps: steps.map(serializeStep) });
 
 					if (
 						currentRun.status === "success" ||

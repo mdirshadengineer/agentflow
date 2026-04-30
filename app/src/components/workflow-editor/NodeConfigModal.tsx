@@ -8,6 +8,7 @@
  */
 import {
 	AlertTriangleIcon,
+	BookOpenIcon,
 	BotIcon,
 	BoxIcon,
 	CheckCircle2Icon,
@@ -15,6 +16,7 @@ import {
 	GitBranchIcon,
 	Loader2Icon,
 	PlayIcon,
+	SlidersHorizontalIcon,
 	Trash2Icon,
 	XCircleIcon,
 	XIcon,
@@ -245,7 +247,7 @@ function OutputPanel({
 		<div className="flex flex-col gap-3 h-full">
 			{!isBuiltIn && workflowId && (
 				<Button
-					variant="secondary"
+					variant="default"
 					size="sm"
 					className="w-full gap-1.5 text-xs"
 					onClick={() => void handleTestStep()}
@@ -261,7 +263,7 @@ function OutputPanel({
 					) : (
 						<PlayIcon className="size-3" />
 					)}
-					{testing ? "Running…" : "Test step"}
+					{testing ? "Running…" : "Execute node"}
 				</Button>
 			)}
 
@@ -303,7 +305,7 @@ function OutputPanel({
 				<div className="flex-1 flex flex-col items-center justify-center gap-2 text-center">
 					<PlayIcon className="size-6 text-muted-foreground/30" />
 					<p className="text-[10px] text-muted-foreground">
-						Click "Test step" to run this node and see its output here.
+						Click "Execute node" to run this node and see its output here.
 					</p>
 				</div>
 			)}
@@ -336,6 +338,9 @@ export function NodeConfigModal({
 }: NodeConfigModalProps) {
 	const [agents, setAgents] = useState<Agent[]>([])
 	const [manifests, setManifests] = useState<NodeManifest[]>([])
+	const [paramTab, setParamTab] = useState<"parameters" | "description">(
+		"parameters"
+	)
 
 	useEffect(() => {
 		listAgents()
@@ -352,6 +357,11 @@ export function NodeConfigModal({
 				console.error("NodeConfigModal: failed to load node manifests", err)
 			})
 	}, [])
+
+	// Reset tab when node changes
+	useEffect(() => {
+		setParamTab("parameters")
+	}, [node?.id])
 
 	if (!node) return null
 
@@ -397,35 +407,46 @@ export function NodeConfigModal({
 				className="max-w-5xl w-[90vw] p-0 overflow-hidden gap-0"
 			>
 				{/* Modal header */}
-				<DialogHeader className="flex-row items-center gap-2 px-4 py-3 border-b shrink-0">
+				<DialogHeader className="flex-row items-center gap-3 px-4 py-3 border-b shrink-0 bg-muted/20">
 					<div
 						className={cn(
-							"size-7 shrink-0 flex items-center justify-center rounded-md border",
+							"size-8 shrink-0 flex items-center justify-center rounded-lg border-2",
 							colorCls
 						)}
 					>
-						<TypeIcon className="size-3.5" />
+						<TypeIcon className="size-4" />
 					</div>
 					<div className="flex-1 min-w-0">
-						<DialogTitle className="text-sm font-semibold truncate">
+						<DialogTitle className="text-sm font-semibold truncate leading-tight">
 							{nodeLabel}
 						</DialogTitle>
-						<p className="text-[10px] text-muted-foreground">
+						<p className="text-[10px] text-muted-foreground leading-tight mt-0.5">
 							{manifestType} node
+							{manifest?.description && (
+								<span className="ml-1.5 text-muted-foreground/60">
+									— {manifest.description}
+								</span>
+							)}
 						</p>
 					</div>
-					<div className="flex items-center gap-1.5 ml-auto">
+					<div className="flex items-center gap-2 ml-auto">
 						<Button
 							variant="ghost"
 							size="sm"
-							className="gap-1.5 text-destructive hover:text-destructive text-xs"
+							className="gap-1.5 text-destructive hover:text-destructive hover:bg-destructive/10 text-xs h-7 px-2"
 							onClick={handleDelete}
 						>
 							<Trash2Icon className="size-3" />
 							Delete
 						</Button>
-						<Button variant="ghost" size="icon-sm" onClick={onClose}>
-							<XIcon className="size-3" />
+						<div className="w-px h-4 bg-border" />
+						<Button
+							variant="ghost"
+							size="icon-sm"
+							onClick={onClose}
+							className="size-7 text-muted-foreground hover:text-foreground"
+						>
+							<XIcon className="size-4" />
 							<span className="sr-only">Close</span>
 						</Button>
 					</div>
@@ -435,11 +456,11 @@ export function NodeConfigModal({
 				<div className="grid grid-cols-[1fr_1.6fr_1fr] divide-x overflow-hidden max-h-[75vh]">
 					{/* ── Column 1: Input ── */}
 					<div className="flex flex-col overflow-hidden">
-						<div className="px-4 py-2 border-b bg-muted/30 shrink-0">
-							<p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+						<div className="px-4 py-2.5 border-b bg-muted/20 shrink-0 flex items-center gap-2">
+							<p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
 								Input
 							</p>
-							<p className="text-[9px] text-muted-foreground/60">
+							<p className="text-[9px] text-muted-foreground/50 mt-px">
 								Data flowing into this node
 							</p>
 						</div>
@@ -453,34 +474,103 @@ export function NodeConfigModal({
 						</div>
 					</div>
 
-					{/* ── Column 2: Config ── */}
+					{/* ── Column 2: Parameters / Description tabs ── */}
 					<div className="flex flex-col overflow-hidden">
-						<div className="px-4 py-2 border-b bg-muted/30 shrink-0">
-							<p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+						{/* Tab header */}
+						<div className="px-1 pt-1 border-b bg-muted/20 shrink-0 flex items-end gap-0">
+							<button
+								type="button"
+								onClick={() => setParamTab("parameters")}
+								className={cn(
+									"flex items-center gap-1.5 px-3 py-2 text-[11px] font-medium transition-colors border-b-2 -mb-px",
+									paramTab === "parameters"
+										? "text-primary border-primary"
+										: "text-muted-foreground border-transparent hover:text-foreground"
+								)}
+							>
+								<SlidersHorizontalIcon className="size-3" />
 								Parameters
-							</p>
-							<p className="text-[9px] text-muted-foreground/60">
-								Configure this node
-							</p>
+							</button>
+							{manifest?.description && (
+								<button
+									type="button"
+									onClick={() => setParamTab("description")}
+									className={cn(
+										"flex items-center gap-1.5 px-3 py-2 text-[11px] font-medium transition-colors border-b-2 -mb-px",
+										paramTab === "description"
+											? "text-primary border-primary"
+											: "text-muted-foreground border-transparent hover:text-foreground"
+									)}
+								>
+									<BookOpenIcon className="size-3" />
+									Docs
+								</button>
+							)}
 						</div>
 						<div className="flex-1 overflow-y-auto p-3">
-							<NodeFormBody
-								node={node}
-								manifest={manifest}
-								agents={agents}
-								allNodes={allNodes}
-								onUpdate={handleUpdate}
-							/>
+							{paramTab === "parameters" ? (
+								<NodeFormBody
+									node={node}
+									manifest={manifest}
+									agents={agents}
+									allNodes={allNodes}
+									onUpdate={handleUpdate}
+								/>
+							) : (
+								<div className="prose prose-sm max-w-none">
+									<p className="text-xs text-muted-foreground leading-relaxed">
+										{manifest?.description}
+									</p>
+									{manifest?.configSchema?.properties &&
+										Object.keys(manifest.configSchema.properties).length >
+											0 && (
+											<div className="mt-4 space-y-2">
+												<p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+													Configuration fields
+												</p>
+												{Object.entries(
+													manifest.configSchema.properties
+												).map(([key, prop]) => (
+													<div
+														key={key}
+														className="rounded-md border bg-muted/30 px-3 py-2"
+													>
+														<div className="flex items-center gap-1.5">
+															<code className="text-[10px] font-mono text-primary">
+																{key}
+															</code>
+															<span className="text-[9px] text-muted-foreground/60 bg-muted rounded px-1">
+																{prop.type ?? "string"}
+															</span>
+															{manifest.configSchema.required?.includes(
+																key
+															) && (
+																<span className="text-[9px] text-destructive font-medium">
+																	required
+																</span>
+															)}
+														</div>
+														{prop.description && (
+															<p className="text-[10px] text-muted-foreground mt-1">
+																{prop.description}
+															</p>
+														)}
+													</div>
+												))}
+											</div>
+										)}
+								</div>
+							)}
 						</div>
 					</div>
 
 					{/* ── Column 3: Output ── */}
 					<div className="flex flex-col overflow-hidden">
-						<div className="px-4 py-2 border-b bg-muted/30 shrink-0">
-							<p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+						<div className="px-4 py-2.5 border-b bg-muted/20 shrink-0 flex items-center gap-2">
+							<p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
 								Output
 							</p>
-							<p className="text-[9px] text-muted-foreground/60">
+							<p className="text-[9px] text-muted-foreground/50 mt-px">
 								Test result & data preview
 							</p>
 						</div>
