@@ -185,20 +185,18 @@ function EditorInner({
 					)}
 				</div>
 
-				{editor.selectedNode && (
-					<NodeConfigModal
-						node={editor.selectedNode}
-						open={editor.selectedNode !== null}
-						onUpdate={(data) =>
-							editor.updateNodeData(editor.selectedNodeId!, data)
-						}
-						onClose={() => editor.setSelectedNodeId(null)}
-						onDelete={(id) => editor.deleteNode(id)}
-						allNodes={editor.nodes}
-						edges={editor.edges}
-						workflowId={workflowId}
-					/>
-				)}
+				<NodeConfigModal
+					node={editor.selectedNode}
+					open={editor.selectedNode !== null}
+					onUpdate={(data) =>
+						editor.updateNodeData(editor.selectedNodeId!, data)
+					}
+					onClose={() => editor.setSelectedNodeId(null)}
+					onDelete={(id) => editor.deleteNode(id)}
+					allNodes={editor.nodes}
+					edges={editor.edges}
+					workflowId={workflowId}
+				/>
 			</div>
 
 			<AiGeneratePanel

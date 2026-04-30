@@ -340,13 +340,17 @@ export function NodeConfigModal({
 	useEffect(() => {
 		listAgents()
 			.then(setAgents)
-			.catch(() => {})
+			.catch((err) => {
+				console.error("NodeConfigModal: failed to load agents", err)
+			})
 	}, [])
 
 	useEffect(() => {
 		listNodes()
 			.then(setManifests)
-			.catch(() => {})
+			.catch((err) => {
+				console.error("NodeConfigModal: failed to load node manifests", err)
+			})
 	}, [])
 
 	if (!node) return null
@@ -477,7 +481,7 @@ export function NodeConfigModal({
 								Output
 							</p>
 							<p className="text-[9px] text-muted-foreground/60">
-								Test result &amp; data preview
+								Test result & data preview
 							</p>
 						</div>
 						<div className="flex-1 overflow-y-auto p-3">
