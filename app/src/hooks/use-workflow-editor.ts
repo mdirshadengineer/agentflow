@@ -9,6 +9,7 @@ import { toast } from "sonner"
 import { aiGenerateWorkflow, updateWorkflow } from "@/lib/api/workflows"
 import type {
 	WorkflowDefinition,
+	WorkflowEdge,
 	WorkflowNode,
 	WorkflowNodeType,
 } from "@/types/workflow"
@@ -34,39 +35,63 @@ export function useWorkflowEditor({
 	const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
 	const [aiPanelOpen, setAiPanelOpen] = useState(false)
 	const autosaveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
-		undefined
+		undefined,
 	)
+	const savingRef = useRef(false)
+
+	// Keep a stable ref to the latest state so the autosave timer never captures
+	// stale closures and doesn't cause the effect to re-register on every render.
+	const latestRef = useRef({ workflowId, name, nodes, edges })
+	useEffect(() => {
+		latestRef.current = { workflowId, name, nodes, edges }
+	})
 
 	const onConnect = useCallback(
 		(connection: Connection) => {
-			setEdges((eds) => addEdge(connection, eds))
+			setEdges((eds) => {
+				// Auto-label edges from condition node handles ("true"/"false")
+				const label =
+					connection.sourceHandle === "true" ||
+					connection.sourceHandle === "false"
+						? connection.sourceHandle
+						: undefined
+				const edge: WorkflowEdge = label
+					? { ...connection, id: crypto.randomUUID(), label }
+					: { ...connection, id: crypto.randomUUID() }
+				return addEdge(edge, eds)
+			})
 			setIsDirty(true)
 		},
-		[setEdges]
+		[setEdges],
 	)
 
 	const markDirty = useCallback(() => setIsDirty(true), [])
 
 	const save = useCallback(async (): Promise<void> => {
+		if (savingRef.current) return
+		savingRef.current = true
 		setSaving(true)
 		try {
+			const { workflowId: id, name: n, nodes: nds, edges: eds } =
+				latestRef.current
 			const definition: WorkflowDefinition = {
-				nodes: nodes as WorkflowNode[],
-				edges,
+				nodes: nds as WorkflowNode[],
+				edges: eds,
 			}
-			await updateWorkflow(workflowId, { name, definition })
+			await updateWorkflow(id, { name: n, definition })
 			setIsDirty(false)
 			toast.success("Workflow saved")
 		} catch (err) {
 			toast.error(
-				err instanceof Error ? err.message : "Failed to save workflow"
+				err instanceof Error ? err.message : "Failed to save workflow",
 			)
 		} finally {
 			setSaving(false)
+			savingRef.current = false
 		}
-	}, [workflowId, name, nodes, edges])
+	}, [])
 
-	// Auto-save when dirty
+	// Auto-save when dirty — uses stable `save` so the timer never double-fires
 	useEffect(() => {
 		if (!isDirty) return
 		if (autosaveTimer.current !== undefined) {
@@ -105,8 +130,63 @@ export function useWorkflowEditor({
 			setNodes((nds) => [...nds, newNode as WorkflowNode])
 			setIsDirty(true)
 		},
-		[setNodes]
+		[setNodes],
 	)
+
+	/** Delete a node and all edges connected to it. */
+	const deleteNode = useCallback(
+		(nodeId: string) => {
+			setNodes((nds) => nds.filter((n) => n.id !== nodeId))
+			setEdges((eds) =>
+				eds.filter((e) => e.source !== nodeId && e.target !== nodeId),
+			)
+			setSelectedNodeId((id) => (id === nodeId ? null : id))
+			setIsDirty(true)
+		},
+		[setNodes, setEdges],
+	)
+
+	/** Load a starter Trigger → Agent → Output skeleton onto the canvas. */
+	const loadTemplate = useCallback(() => {
+		const triggerId = crypto.randomUUID()
+		const agentId = crypto.randomUUID()
+		const outputId = crypto.randomUUID()
+		const templateNodes: WorkflowNode[] = [
+			{
+				id: triggerId,
+				type: "trigger",
+				position: { x: 200, y: 80 },
+				data: { label: "Trigger", triggerType: "manual" },
+			},
+			{
+				id: agentId,
+				type: "agent",
+				position: { x: 200, y: 220 },
+				data: { label: "Agent", agentId: "" },
+			},
+			{
+				id: outputId,
+				type: "output",
+				position: { x: 200, y: 360 },
+				data: { label: "Output" },
+			},
+		]
+		const templateEdges: WorkflowEdge[] = [
+			{
+				id: crypto.randomUUID(),
+				source: triggerId,
+				target: agentId,
+			},
+			{
+				id: crypto.randomUUID(),
+				source: agentId,
+				target: outputId,
+			},
+		]
+		setNodes(templateNodes)
+		setEdges(templateEdges)
+		setIsDirty(true)
+	}, [setNodes, setEdges])
 
 	const updateNodeData = useCallback(
 		(nodeId: string, data: Record<string, unknown>) => {
@@ -114,20 +194,21 @@ export function useWorkflowEditor({
 				nds.map((n) =>
 					n.id === nodeId
 						? ({ ...n, data: { ...n.data, ...data } } as WorkflowNode)
-						: n
-				)
+						: n,
+				),
 			)
 			setIsDirty(true)
 		},
-		[setNodes]
+		[setNodes],
 	)
+
 	const applyAiDefinition = useCallback(
 		(definition: WorkflowDefinition) => {
 			setNodes(definition.nodes)
 			setEdges(definition.edges)
 			setIsDirty(true)
 		},
-		[setNodes, setEdges]
+		[setNodes, setEdges],
 	)
 
 	const runAiGenerate = useCallback(
@@ -136,7 +217,7 @@ export function useWorkflowEditor({
 			applyAiDefinition(definition)
 			toast.success("AI workflow generated — review and save")
 		},
-		[workflowId, applyAiDefinition]
+		[workflowId, applyAiDefinition],
 	)
 
 	const selectedNode = nodes.find((n) => n.id === selectedNodeId) ?? null
@@ -159,6 +240,8 @@ export function useWorkflowEditor({
 		markDirty,
 		save,
 		addNode,
+		deleteNode,
+		loadTemplate,
 		updateNodeData,
 		applyAiDefinition,
 		runAiGenerate,

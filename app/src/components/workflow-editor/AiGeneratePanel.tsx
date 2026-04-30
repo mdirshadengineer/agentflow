@@ -1,5 +1,5 @@
 import { SparklesIcon } from "lucide-react"
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Field, FieldLabel } from "@/components/ui/field"
 import {
@@ -11,6 +11,8 @@ import {
 	SheetTitle,
 } from "@/components/ui/sheet"
 import { Textarea } from "@/components/ui/textarea"
+
+const MAX_HISTORY = 5
 
 interface AiGeneratePanelProps {
 	open: boolean
@@ -26,6 +28,7 @@ export function AiGeneratePanel({
 	const [prompt, setPrompt] = useState("")
 	const [loading, setLoading] = useState(false)
 	const [error, setError] = useState<string | null>(null)
+	const historyRef = useRef<string[]>([])
 
 	const handleGenerate = async () => {
 		if (!prompt.trim()) return
@@ -33,8 +36,14 @@ export function AiGeneratePanel({
 		setLoading(true)
 		try {
 			await onGenerate(prompt.trim())
+			// Record in history (dedup + keep latest MAX_HISTORY)
+			const trimmed = prompt.trim()
+			historyRef.current = [
+				trimmed,
+				...historyRef.current.filter((h) => h !== trimmed),
+			].slice(0, MAX_HISTORY)
 			onOpenChange(false)
-			setPrompt("")
+			// Do NOT clear the prompt so users can iterate
 		} catch (err) {
 			setError(err instanceof Error ? err.message : "Generation failed")
 		} finally {
@@ -73,6 +82,25 @@ export function AiGeneratePanel({
 							disabled={loading}
 						/>
 					</Field>
+
+					{historyRef.current.length > 0 && (
+						<div className="mt-3 space-y-1.5">
+							<p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
+								Recent prompts
+							</p>
+							{historyRef.current.map((h) => (
+								<button
+									key={h}
+									type="button"
+									onClick={() => setPrompt(h)}
+									className="w-full text-left text-[10px] truncate rounded border px-2 py-1 bg-muted hover:bg-accent transition-colors"
+									title={h}
+								>
+									{h}
+								</button>
+							))}
+						</div>
+					)}
 
 					<p className="mt-3 text-[10px] text-muted-foreground">
 						The generated workflow replaces the current canvas. You can still
