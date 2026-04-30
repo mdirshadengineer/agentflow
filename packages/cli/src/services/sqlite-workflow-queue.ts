@@ -4,7 +4,7 @@ import type {
 	RunStatus,
 	WorkflowQueue,
 } from "@mdirshadengineer/agentflow-core";
-import { eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { getDb, workflowRuns } from "../db/index.js";
 
 /**
@@ -20,6 +20,7 @@ export class SqliteWorkflowQueue implements WorkflowQueue {
 				id,
 				workflowId,
 				status: "queued",
+				createdAt: new Date(),
 			})
 			.run();
 		if (triggerData !== undefined) {
@@ -38,6 +39,7 @@ export class SqliteWorkflowQueue implements WorkflowQueue {
 			.select()
 			.from(workflowRuns)
 			.where(eq(workflowRuns.status, "queued"))
+			.orderBy(asc(workflowRuns.createdAt))
 			.all()
 			.map((r) => ({ id: r.id, workflowId: r.workflowId }));
 	}

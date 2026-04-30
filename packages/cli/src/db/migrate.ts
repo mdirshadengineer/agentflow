@@ -170,4 +170,16 @@ export function runMigrations() {
 			markApplied(raw, 3);
 		})();
 	}
+
+	// ── Version 4: created_at column on workflow_runs ─────────────────────────
+	if (!isApplied(raw, 4)) {
+		raw.transaction(() => {
+			if (!columnExists(raw, "workflow_runs", "created_at")) {
+				raw.exec(
+					"ALTER TABLE workflow_runs ADD COLUMN created_at INTEGER NOT NULL DEFAULT (unixepoch('now') * 1000)",
+				);
+			}
+			markApplied(raw, 4);
+		})();
+	}
 }
