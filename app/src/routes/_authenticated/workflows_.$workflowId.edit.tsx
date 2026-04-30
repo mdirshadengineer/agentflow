@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { ReactFlowProvider, useReactFlow } from "@xyflow/react"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import { Skeleton } from "@/components/ui/skeleton"
 import { AiGeneratePanel } from "@/components/workflow-editor/AiGeneratePanel"
@@ -91,6 +91,8 @@ function EditorInner({
 
 	const [showMiniMap, setShowMiniMap] = useState(true)
 	const { fitView } = useReactFlow()
+	// Ref to the canvas wrapper div — shared with NodeLibrary for click-to-add centering
+	const canvasRef = useRef<HTMLDivElement>(null)
 
 	// ── Keyboard shortcuts ────────────────────────────────────────────────────
 	useEffect(() => {
@@ -155,9 +157,9 @@ function EditorInner({
 			/>
 
 			<div className="flex flex-1 overflow-hidden">
-				<NodeLibrary onAddNode={editor.addNode} />
+				<NodeLibrary onAddNode={editor.addNode} canvasRef={canvasRef} />
 
-				<div className="flex-1 overflow-hidden">
+				<div ref={canvasRef} className="flex-1 overflow-hidden">
 					<WorkflowCanvas
 						nodes={editor.nodes}
 						edges={editor.edges}

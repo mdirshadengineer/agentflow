@@ -5,6 +5,18 @@ import { getRawSqlite } from "./connection.js";
 // Helpers
 // ---------------------------------------------------------------------------
 
+// Allowed table names that may be inspected via PRAGMA table_info.
+// Validated before interpolation to prevent any SQL injection risk.
+const ALLOWED_TABLES = new Set([
+	"users",
+	"agents",
+	"workflows",
+	"workflow_runs",
+	"workflow_run_steps",
+	"node_executions",
+	"agent_sessions",
+]);
+
 /**
  * Check whether a column already exists in a table using PRAGMA table_info.
  * This is version-agnostic and avoids relying on SQLite error message wording.
@@ -14,6 +26,10 @@ function columnExists(
 	table: string,
 	column: string,
 ): boolean {
+	if (!ALLOWED_TABLES.has(table)) {
+		throw new Error(`columnExists: unexpected table name "${table}"`);
+	}
+	// Table name is validated above; column names come from a hardcoded array.
 	const rows = raw.pragma(`table_info(${table})`) as Array<{ name: string }>;
 	return rows.some((r) => r.name === column);
 }

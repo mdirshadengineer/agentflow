@@ -55,9 +55,8 @@ export function useWorkflowEditor({
 					connection.sourceHandle === "false"
 						? connection.sourceHandle
 						: undefined
-				const edge: WorkflowEdge = label
-					? { ...connection, id: crypto.randomUUID(), label }
-					: { ...connection, id: crypto.randomUUID() }
+				const baseEdge: WorkflowEdge = { ...connection, id: crypto.randomUUID() }
+				const edge: WorkflowEdge = label ? { ...baseEdge, label } : baseEdge
 				return addEdge(edge, eds)
 			})
 			setIsDirty(true)

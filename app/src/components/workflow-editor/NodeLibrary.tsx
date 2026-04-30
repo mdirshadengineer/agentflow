@@ -109,9 +109,11 @@ function colorForType(type: string): string {
 interface NodeLibraryProps {
 	className?: string
 	onAddNode: (type: string, position: { x: number; y: number }) => void
+	/** Optional ref to the canvas wrapper element for accurate centre calculation. */
+	canvasRef?: React.RefObject<HTMLElement | null>
 }
 
-export function NodeLibrary({ className, onAddNode }: NodeLibraryProps) {
+export function NodeLibrary({ className, onAddNode, canvasRef }: NodeLibraryProps) {
 	const [nodes, setNodes] = useState<NodeTypeConfig[] | null>(null)
 	const [fetchError, setFetchError] = useState(false)
 	const [search, setSearch] = useState("")
@@ -142,12 +144,14 @@ export function NodeLibrary({ className, onAddNode }: NodeLibraryProps) {
 		e.dataTransfer.effectAllowed = "move"
 	}
 
-	/** Add a node at the centre of the visible viewport. */
+	/** Add a node at the centre of the visible canvas. */
 	const handleClick = (nodeType: string) => {
-		const position = screenToFlowPosition({
-			x: window.innerWidth / 2,
-			y: window.innerHeight / 2,
-		})
+		// Use the canvas element's bounding rect for accurate centre calculation;
+		// fall back to viewport centre if the ref isn't provided.
+		const rect = canvasRef?.current?.getBoundingClientRect()
+		const screenX = rect ? rect.left + rect.width / 2 : window.innerWidth / 2
+		const screenY = rect ? rect.top + rect.height / 2 : window.innerHeight / 2
+		const position = screenToFlowPosition({ x: screenX, y: screenY })
 		onAddNode(nodeType, position)
 	}
 
