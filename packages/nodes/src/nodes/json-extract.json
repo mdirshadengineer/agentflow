@@ -25,7 +25,7 @@
 		"properties": {
 			"value": {
 				"type": "string",
-				"description": "The extracted value, or the defaultValue when the path is not found."
+				"description": "The extracted value at the given path. The actual runtime type matches the JSON value at that path (string, number, boolean, object, array, or null)."
 			}
 		}
 	}

@@ -102,7 +102,7 @@ function RunSummaryBar({
 			{isOk && <CheckCircleIcon className="size-3.5 text-green-400 shrink-0" />}
 			{isFail && <XCircleIcon className="size-3.5 text-red-400 shrink-0" />}
 			{!isOk && !isFail && (
-				<CircleDashedIcon className="size-3.5 text-zinc-500 shrink-0 animate-spin" style={{ animationDuration: "3s" }} />
+				<CircleDashedIcon className="size-3.5 text-zinc-500 shrink-0 animate-spin [animation-duration:3s]" />
 			)}
 			<span
 				className={cn(
