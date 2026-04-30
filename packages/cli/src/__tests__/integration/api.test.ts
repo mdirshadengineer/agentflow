@@ -12,8 +12,10 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 vi.mock("../../db/connection.js", async () => {
 	const { default: Database } = await import("better-sqlite3");
 	const { drizzle } = await import("drizzle-orm/better-sqlite3");
-	const db = drizzle(new Database(":memory:"));
-	return { getDb: () => db };
+	const sqlite = new Database(":memory:");
+	sqlite.pragma("foreign_keys = ON");
+	const db = drizzle(sqlite);
+	return { getDb: () => db, getRawSqlite: () => sqlite };
 });
 
 // ── Test server and DB setup ──────────────────────────────────────────────────
@@ -227,5 +229,101 @@ describe("Agents CRUD", () => {
 	it("returns 401 when no token is provided", async () => {
 		const res = await app.inject({ method: "GET", url: "/api/v1/agents" });
 		expect(res.statusCode).toBe(401);
+	});
+
+	it("GET /api/v1/agents/:id — returns the agent when it exists", async () => {
+		const create = await app.inject({
+			method: "POST",
+			url: "/api/v1/agents",
+			payload: { name: "Fetch Me", type: "llm" },
+			cookies: { token: cookie },
+		});
+		const { id } = create.json() as { id: string };
+
+		const res = await app.inject({
+			method: "GET",
+			url: `/api/v1/agents/${id}`,
+			cookies: { token: cookie },
+		});
+		expect(res.statusCode).toBe(200);
+		const body = res.json() as { id: string; name: string };
+		expect(body.id).toBe(id);
+		expect(body.name).toBe("Fetch Me");
+	});
+
+	it("PATCH /api/v1/agents/:id — updates name and llmModel", async () => {
+		const create = await app.inject({
+			method: "POST",
+			url: "/api/v1/agents",
+			payload: { name: "Before Patch", type: "llm" },
+			cookies: { token: cookie },
+		});
+		const { id } = create.json() as { id: string };
+
+		const res = await app.inject({
+			method: "PATCH",
+			url: `/api/v1/agents/${id}`,
+			payload: { name: "After Patch", llmModel: "gpt-4o" },
+			cookies: { token: cookie },
+		});
+		expect(res.statusCode).toBe(200);
+		const body = res.json() as { name: string; llmModel: string };
+		expect(body.name).toBe("After Patch");
+		expect(body.llmModel).toBe("gpt-4o");
+	});
+
+	it("PATCH /api/v1/agents/:id — returns 404 for unknown id", async () => {
+		const res = await app.inject({
+			method: "PATCH",
+			url: "/api/v1/agents/does-not-exist",
+			payload: { name: "X" },
+			cookies: { token: cookie },
+		});
+		expect(res.statusCode).toBe(404);
+	});
+
+	it("GET /api/v1/agents/:id/sessions — returns empty list for a new agent", async () => {
+		const create = await app.inject({
+			method: "POST",
+			url: "/api/v1/agents",
+			payload: { name: "Sessions Agent", type: "llm" },
+			cookies: { token: cookie },
+		});
+		const { id } = create.json() as { id: string };
+
+		const res = await app.inject({
+			method: "GET",
+			url: `/api/v1/agents/${id}/sessions`,
+			cookies: { token: cookie },
+		});
+		expect(res.statusCode).toBe(200);
+		expect(Array.isArray(res.json())).toBe(true);
+		expect((res.json() as unknown[]).length).toBe(0);
+	});
+
+	it("GET /api/v1/agents/:id/sessions/:sessionId — returns 404 for unknown session", async () => {
+		const create = await app.inject({
+			method: "POST",
+			url: "/api/v1/agents",
+			payload: { name: "Session 404 Agent", type: "llm" },
+			cookies: { token: cookie },
+		});
+		const { id } = create.json() as { id: string };
+
+		const res = await app.inject({
+			method: "GET",
+			url: `/api/v1/agents/${id}/sessions/no-such-session`,
+			cookies: { token: cookie },
+		});
+		expect(res.statusCode).toBe(404);
+	});
+
+	it("GET /api/v1/agents/:id/sessions — returns 404 when agent does not exist", async () => {
+		const res = await app.inject({
+			method: "GET",
+			url: "/api/v1/agents/no-such-agent/sessions",
+			cookies: { token: cookie },
+		});
+		expect(res.statusCode).toBe(404);
 	});
 });
