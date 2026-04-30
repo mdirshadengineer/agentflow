@@ -1,0 +1,24 @@
+{
+	"name": "agentflow-e2e",
+	"private": true,
+	"version": "0.0.1",
+	"description": "End-to-end tests for AgentFlow using Playwright",
+	"license": "Apache-2.0",
+	"type": "module",
+	"engines": {
+		"node": ">=22"
+	},
+	"scripts": {
+		"test": "echo 'Run Playwright tests with: pnpm test:e2e (requires running servers)'",
+		"test:e2e": "playwright test",
+		"test:ui": "playwright test --ui",
+		"test:headed": "playwright test --headed",
+		"test:debug": "playwright test --debug",
+		"codegen": "playwright codegen http://localhost:3000",
+		"install-browsers": "playwright install chromium"
+	},
+	"devDependencies": {
+		"@playwright/test": "1.49.1",
+		"@types/node": "25.6.0"
+	}
+}

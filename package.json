@@ -5,6 +5,8 @@
 	"scripts": {
 		"dev": "turbo run dev",
 		"test": "turbo run test",
+		"test:e2e": "pnpm --filter agentflow-e2e test:e2e",
+		"test:e2e:ui": "pnpm --filter agentflow-e2e test:ui",
 		"lint": "turbo run lint",
 		"typecheck": "turbo run typecheck",
 		"build": "turbo run build",
