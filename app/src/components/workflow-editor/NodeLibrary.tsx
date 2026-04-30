@@ -139,7 +139,7 @@ export function NodeLibrary({ className, onAddNode, canvasRef }: NodeLibraryProp
 			})
 	}, [])
 
-	const onDragStart = (e: DragEvent<HTMLDivElement>, nodeType: string) => {
+	const onDragStart = (e: DragEvent<HTMLElement>, nodeType: string) => {
 		e.dataTransfer.setData("application/agentflow-node-type", nodeType)
 		e.dataTransfer.effectAllowed = "move"
 	}
