@@ -20,7 +20,9 @@ export const agents = sqliteTable("agents", {
 	llmModel: text("llm_model"),
 	systemPrompt: text("system_prompt"),
 	tools: text("tools"),
-	ownerId: text("owner_id").notNull(),
+	ownerId: text("owner_id")
+		.notNull()
+		.references(() => users.id, { onDelete: "cascade" }),
 	createdAt: integer("created_at", { mode: "timestamp_ms" })
 		.notNull()
 		.default(sql`(unixepoch('now') * 1000)`),
@@ -33,7 +35,9 @@ export const workflows = sqliteTable("workflows", {
 	id: text("id").primaryKey(),
 	name: text("name").notNull(),
 	definition: text("definition").notNull().default("{}"),
-	ownerId: text("owner_id").notNull(),
+	ownerId: text("owner_id")
+		.notNull()
+		.references(() => users.id, { onDelete: "cascade" }),
 	createdAt: integer("created_at", { mode: "timestamp_ms" })
 		.notNull()
 		.default(sql`(unixepoch('now') * 1000)`),
@@ -44,7 +48,9 @@ export const workflows = sqliteTable("workflows", {
 
 export const workflowRuns = sqliteTable("workflow_runs", {
 	id: text("id").primaryKey(),
-	workflowId: text("workflow_id").notNull(),
+	workflowId: text("workflow_id")
+		.notNull()
+		.references(() => workflows.id, { onDelete: "cascade" }),
 	status: text("status", {
 		enum: ["queued", "running", "success", "failed"],
 	})
@@ -57,7 +63,9 @@ export const workflowRuns = sqliteTable("workflow_runs", {
 
 export const workflowRunSteps = sqliteTable("workflow_run_steps", {
 	id: text("id").primaryKey(),
-	runId: text("run_id").notNull(),
+	runId: text("run_id")
+		.notNull()
+		.references(() => workflowRuns.id, { onDelete: "cascade" }),
 	stepName: text("step_name").notNull(),
 	status: text("status").notNull(),
 	logs: text("logs"),
@@ -67,7 +75,9 @@ export const workflowRunSteps = sqliteTable("workflow_run_steps", {
 
 export const nodeExecutions = sqliteTable("node_executions", {
 	id: text("id").primaryKey(),
-	runId: text("run_id").notNull(),
+	runId: text("run_id")
+		.notNull()
+		.references(() => workflowRuns.id, { onDelete: "cascade" }),
 	nodeId: text("node_id").notNull(),
 	stepName: text("step_name").notNull(),
 	nodeType: text("node_type").notNull(),
@@ -81,8 +91,13 @@ export const nodeExecutions = sqliteTable("node_executions", {
 
 export const agentSessions = sqliteTable("agent_sessions", {
 	id: text("id").primaryKey(),
-	agentId: text("agent_id").notNull(),
-	workflowRunId: text("workflow_run_id"),
+	agentId: text("agent_id")
+		.notNull()
+		.references(() => agents.id, { onDelete: "cascade" }),
+	workflowRunId: text("workflow_run_id").references(
+		() => workflowRuns.id,
+		{ onDelete: "set null" },
+	),
 	messages: text("messages").notNull().default("[]"),
 	status: text("status").notNull(),
 	createdAt: integer("created_at", { mode: "timestamp_ms" })

@@ -1,4 +1,15 @@
-import { ChevronDownIcon, ChevronRightIcon } from "lucide-react"
+import {
+	BotIcon,
+	BoxIcon,
+	ChevronDownIcon,
+	ChevronRightIcon,
+	ChevronRightSquareIcon,
+	FlagIcon,
+	GitBranchIcon,
+	Trash2Icon,
+	XIcon,
+	ZapIcon,
+} from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
@@ -20,19 +31,32 @@ import { type Agent, listAgents } from "@/lib/api/agents"
 import { listNodes, type NodeManifest } from "@/lib/api/nodes"
 import type { WorkflowNode } from "@/types/workflow"
 
+const NODE_TYPE_ICONS: Record<string, React.ElementType> = {
+	trigger: ZapIcon,
+	agent: BotIcon,
+	condition: GitBranchIcon,
+	output: FlagIcon,
+	generic: BoxIcon,
+}
+
 interface NodeConfigPanelProps {
 	node: WorkflowNode
 	onUpdate: (data: Record<string, unknown>) => void
+	onClose: () => void
+	onDelete: (nodeId: string) => void
 	allNodes?: WorkflowNode[]
 }
 
 export function NodeConfigPanel({
 	node,
 	onUpdate,
+	onClose,
+	onDelete,
 	allNodes,
 }: NodeConfigPanelProps) {
 	const [agents, setAgents] = useState<Agent[]>([])
 	const [manifests, setManifests] = useState<NodeManifest[]>([])
+	const [collapsed, setCollapsed] = useState(false)
 
 	useEffect(() => {
 		listAgents()
@@ -64,15 +88,60 @@ export function NodeConfigPanel({
 		node.type === "condition" ||
 		node.type === "output"
 
+	const nodeLabel =
+		(node.data as { label?: string }).label ||
+		node.type.charAt(0).toUpperCase() + node.type.slice(1)
+
+	const TypeIcon = NODE_TYPE_ICONS[node.type] ?? BoxIcon
+
+	// Collapsed strip view
+	if (collapsed) {
+		return (
+			<aside className="w-9 shrink-0 border-l bg-background flex flex-col items-center pt-3 gap-3">
+				<Button
+					variant="ghost"
+					size="icon-sm"
+					onClick={() => setCollapsed(false)}
+					title="Expand panel"
+				>
+					<ChevronRightSquareIcon className="size-3.5" />
+				</Button>
+				<TypeIcon className="size-3.5 text-muted-foreground" />
+			</aside>
+		)
+	}
+
 	return (
-		<aside className="w-64 shrink-0 border-l bg-background overflow-y-auto">
-			<div className="p-3 border-b">
-				<p className="text-xs font-semibold">
-					{node.type.charAt(0).toUpperCase() + node.type.slice(1)} Node
-				</p>
-				<p className="text-[10px] text-muted-foreground">Configure this node</p>
+		<aside className="w-64 shrink-0 border-l bg-background overflow-y-auto flex flex-col">
+			<div className="p-3 border-b flex items-start justify-between gap-1">
+				<div className="min-w-0">
+					<p className="text-xs font-semibold truncate">{nodeLabel}</p>
+					<p className="text-[10px] text-muted-foreground">
+						{node.type.charAt(0).toUpperCase() + node.type.slice(1)} node
+					</p>
+				</div>
+				<div className="flex items-center gap-0.5 shrink-0">
+					<Button
+						variant="ghost"
+						size="icon-sm"
+						onClick={() => setCollapsed(true)}
+						title="Collapse panel"
+						className="size-6"
+					>
+						<ChevronRightIcon className="size-3" />
+					</Button>
+					<Button
+						variant="ghost"
+						size="icon-sm"
+						onClick={onClose}
+						title="Close panel"
+						className="size-6"
+					>
+						<XIcon className="size-3" />
+					</Button>
+				</div>
 			</div>
-			<div className="p-3">
+			<div className="p-3 flex-1">
 				<FieldGroup>
 					<Field>
 						<FieldLabel>Label</FieldLabel>
@@ -109,6 +178,17 @@ export function NodeConfigPanel({
 						/>
 					)}
 				</FieldGroup>
+			</div>
+			<div className="p-3 border-t">
+				<Button
+					variant="destructive"
+					size="sm"
+					className="w-full gap-1.5 text-xs"
+					onClick={() => onDelete(node.id)}
+				>
+					<Trash2Icon className="size-3" />
+					Delete node
+				</Button>
 			</div>
 		</aside>
 	)

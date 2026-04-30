@@ -129,6 +129,16 @@
   }
 }
 
+@keyframes node-select-pulse {
+  0%   { box-shadow: 0 0 0 0 color-mix(in oklch, var(--primary) 40%, transparent); }
+  60%  { box-shadow: 0 0 0 6px color-mix(in oklch, var(--primary) 0%, transparent); }
+  100% { box-shadow: none; }
+}
+
+.animate-node-select {
+  animation: node-select-pulse 0.45s ease-out forwards;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

@@ -1,6 +1,8 @@
 import {
 	BotIcon,
 	BoxIcon,
+	ChevronLeftSquareIcon,
+	ChevronRightSquareIcon,
 	CircleIcon,
 	ClockIcon,
 	FlagIcon,
@@ -10,6 +12,9 @@ import {
 	ZapIcon,
 } from "lucide-react"
 import { type DragEvent, useEffect, useState } from "react"
+import { useReactFlow } from "@xyflow/react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { listNodes } from "@/lib/api/nodes"
 import { cn } from "@/lib/utils"
@@ -103,11 +108,17 @@ function colorForType(type: string): string {
 
 interface NodeLibraryProps {
 	className?: string
+	onAddNode: (type: string, position: { x: number; y: number }) => void
+	/** Optional ref to the canvas wrapper element for accurate centre calculation. */
+	canvasRef?: React.RefObject<HTMLElement | null>
 }
 
-export function NodeLibrary({ className }: NodeLibraryProps) {
+export function NodeLibrary({ className, onAddNode, canvasRef }: NodeLibraryProps) {
 	const [nodes, setNodes] = useState<NodeTypeConfig[] | null>(null)
 	const [fetchError, setFetchError] = useState(false)
+	const [search, setSearch] = useState("")
+	const [collapsed, setCollapsed] = useState(false)
+	const { screenToFlowPosition } = useReactFlow()
 
 	useEffect(() => {
 		listNodes()
@@ -119,7 +130,7 @@ export function NodeLibrary({ className }: NodeLibraryProps) {
 						description: m.description,
 						icon: iconForType(m.type),
 						colorClass: colorForType(m.type),
-					}))
+					})),
 				)
 			})
 			.catch(() => {
@@ -133,35 +144,117 @@ export function NodeLibrary({ className }: NodeLibraryProps) {
 		e.dataTransfer.effectAllowed = "move"
 	}
 
+	/** Add a node at the centre of the visible canvas. */
+	const handleClick = (nodeType: string) => {
+		// Use the canvas element's bounding rect for accurate centre calculation;
+		// fall back to viewport centre if the ref isn't provided.
+		const rect = canvasRef?.current?.getBoundingClientRect()
+		const screenX = rect ? rect.left + rect.width / 2 : window.innerWidth / 2
+		const screenY = rect ? rect.top + rect.height / 2 : window.innerHeight / 2
+		const position = screenToFlowPosition({ x: screenX, y: screenY })
+		onAddNode(nodeType, position)
+	}
+
 	const displayNodes = nodes ?? FALLBACK_NODES
+	const filteredNodes = search.trim()
+		? displayNodes.filter(
+				(n) =>
+					n.label.toLowerCase().includes(search.toLowerCase()) ||
+					n.description.toLowerCase().includes(search.toLowerCase()),
+			)
+		: displayNodes
+
+	// Collapsed icon-strip view
+	if (collapsed) {
+		return (
+			<aside className="flex flex-col items-center w-10 shrink-0 border-r bg-background pt-2 gap-2 overflow-y-auto">
+				<Button
+					variant="ghost"
+					size="icon-sm"
+					onClick={() => setCollapsed(false)}
+					title="Expand node library"
+				>
+					<ChevronRightSquareIcon className="size-3.5" />
+				</Button>
+				{displayNodes.map(({ type, label, icon: Icon, colorClass }) => (
+					<button
+						key={type}
+						type="button"
+						draggable
+						onDragStart={(e) => onDragStart(e, type)}
+						onClick={() => handleClick(type)}
+						title={label}
+						className={cn(
+							"size-7 flex items-center justify-center rounded border",
+							"cursor-grab active:cursor-grabbing hover:bg-accent transition-colors",
+							colorClass,
+						)}
+					>
+						<Icon className="size-3.5" />
+					</button>
+				))}
+			</aside>
+		)
+	}
 
 	return (
 		<aside
 			className={cn(
 				"flex flex-col gap-2 w-52 shrink-0 border-r bg-background p-3 overflow-y-auto",
-				className
+				className,
 			)}
 		>
-			<p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
-				Nodes
-			</p>
+			<div className="flex items-center justify-between mb-1">
+				<p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+					Nodes
+				</p>
+				<Button
+					variant="ghost"
+					size="icon-sm"
+					onClick={() => setCollapsed(true)}
+					title="Collapse node library"
+					className="size-5"
+				>
+					<ChevronLeftSquareIcon className="size-3.5" />
+				</Button>
+			</div>
+
+			<Input
+				value={search}
+				onChange={(e) => setSearch(e.target.value)}
+				placeholder="Search nodes…"
+				className="h-7 text-xs"
+			/>
+
 			{nodes === null ? (
 				<>
 					<Skeleton className="h-12 w-full" />
 					<Skeleton className="h-12 w-full" />
 					<Skeleton className="h-12 w-full" />
 				</>
+			) : filteredNodes.length === 0 ? (
+				<p className="text-[10px] text-muted-foreground">No nodes match.</p>
 			) : (
-				displayNodes.map(
+				filteredNodes.map(
 					({ type, label, description, icon: Icon, colorClass }) => (
 						<div
 							key={type}
 							draggable
 							onDragStart={(e) => onDragStart(e, type)}
+							onClick={() => handleClick(type)}
+							onKeyDown={(e) => {
+								if (e.key === "Enter" || e.key === " ") {
+									e.preventDefault()
+									handleClick(type)
+								}
+							}}
+							role="button"
+							tabIndex={0}
+							title={`Drag or click to add ${label}`}
 							className={cn(
 								"flex items-start gap-2 rounded-lg border p-2.5 cursor-grab active:cursor-grabbing select-none",
 								"hover:bg-accent transition-colors",
-								colorClass
+								colorClass,
 							)}
 						>
 							<Icon className="size-3.5 shrink-0 mt-0.5" />
@@ -172,7 +265,7 @@ export function NodeLibrary({ className }: NodeLibraryProps) {
 								</p>
 							</div>
 						</div>
-					)
+					),
 				)
 			)}
 			{fetchError && (
@@ -181,7 +274,7 @@ export function NodeLibrary({ className }: NodeLibraryProps) {
 				</p>
 			)}
 			<p className="text-[10px] text-muted-foreground mt-2">
-				Drag nodes onto the canvas to build your workflow.
+				Drag or click nodes to add them to the canvas.
 			</p>
 		</aside>
 	)

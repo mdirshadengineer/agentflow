@@ -1,24 +1,44 @@
 import { Link } from "@tanstack/react-router"
-import { ArrowLeftIcon, PlayIcon, SaveIcon, SparklesIcon } from "lucide-react"
+import {
+	ArrowLeftIcon,
+	HistoryIcon,
+	MapIcon,
+	MaximizeIcon,
+	PlayIcon,
+	SaveIcon,
+	SparklesIcon,
+} from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
 interface WorkflowEditorToolbarProps {
+	workflowId: string
 	name: string
 	onNameChange: (name: string) => void
 	isDirty: boolean
 	saving: boolean
+	nodeCount: number
+	edgeCount: number
+	showMiniMap: boolean
+	onToggleMiniMap: () => void
+	onFitView: () => void
 	onSave: () => void
 	onRun: () => void
 	onAiGenerate: () => void
 }
 
 export function WorkflowEditorToolbar({
+	workflowId,
 	name,
 	onNameChange,
 	isDirty,
 	saving,
+	nodeCount,
+	edgeCount,
+	showMiniMap,
+	onToggleMiniMap,
+	onFitView,
 	onSave,
 	onRun,
 	onAiGenerate,
@@ -43,9 +63,40 @@ export function WorkflowEditorToolbar({
 						Unsaved
 					</Badge>
 				)}
+				<span className="text-[10px] text-muted-foreground shrink-0 tabular-nums">
+					{nodeCount} node{nodeCount !== 1 ? "s" : ""} ·{" "}
+					{edgeCount} edge{edgeCount !== 1 ? "s" : ""}
+				</span>
 			</div>
 
 			<div className="flex items-center gap-1.5 ml-auto">
+				<Button
+					variant="ghost"
+					size="icon-sm"
+					onClick={onFitView}
+					title="Fit view (zoom to fit all nodes)"
+				>
+					<MaximizeIcon className="size-3.5" />
+					<span className="sr-only">Fit view</span>
+				</Button>
+				<Button
+					variant={showMiniMap ? "secondary" : "ghost"}
+					size="icon-sm"
+					onClick={onToggleMiniMap}
+					title="Toggle minimap"
+				>
+					<MapIcon className="size-3.5" />
+					<span className="sr-only">Toggle minimap</span>
+				</Button>
+				<Button variant="ghost" size="icon-sm" asChild title="View run history">
+					<Link
+						to="/workflows/$workflowId/runs"
+						params={{ workflowId }}
+					>
+						<HistoryIcon className="size-3.5" />
+						<span className="sr-only">Run history</span>
+					</Link>
+				</Button>
 				<Button
 					variant="outline"
 					size="sm"
@@ -60,6 +111,7 @@ export function WorkflowEditorToolbar({
 					size="sm"
 					onClick={onSave}
 					disabled={saving}
+					title="Save (Ctrl+S)"
 					className="gap-1.5"
 				>
 					<SaveIcon className="size-3.5" />

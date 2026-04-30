@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import { ReactFlowProvider } from "@xyflow/react"
-import { useEffect, useState } from "react"
+import { ReactFlowProvider, useReactFlow } from "@xyflow/react"
+import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import { Skeleton } from "@/components/ui/skeleton"
 import { AiGeneratePanel } from "@/components/workflow-editor/AiGeneratePanel"
@@ -89,6 +89,34 @@ function EditorInner({
 		initial: initialDefinition,
 	})
 
+	const [showMiniMap, setShowMiniMap] = useState(true)
+	const { fitView } = useReactFlow()
+	// Ref to the canvas wrapper div — shared with NodeLibrary for click-to-add centering
+	const canvasRef = useRef<HTMLDivElement>(null)
+
+	// ── Keyboard shortcuts ────────────────────────────────────────────────────
+	useEffect(() => {
+		const handleKeyDown = (e: KeyboardEvent) => {
+			// Ctrl+S / Cmd+S — save
+			if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+				e.preventDefault()
+				void editor.save()
+				return
+			}
+			// Delete / Backspace — remove selected node (only when no input is focused)
+			if (
+				(e.key === "Delete" || e.key === "Backspace") &&
+				editor.selectedNodeId !== null &&
+				!(e.target instanceof HTMLInputElement) &&
+				!(e.target instanceof HTMLTextAreaElement)
+			) {
+				editor.deleteNode(editor.selectedNodeId)
+			}
+		}
+		window.addEventListener("keydown", handleKeyDown)
+		return () => window.removeEventListener("keydown", handleKeyDown)
+	}, [editor])
+
 	const handleRun = async () => {
 		// Auto-save first so the run uses the latest definition
 		if (editor.isDirty) {
@@ -110,6 +138,7 @@ function EditorInner({
 			style={{ height: "calc(100vh - 3rem)" }}
 		>
 			<WorkflowEditorToolbar
+				workflowId={workflowId}
 				name={editor.name}
 				onNameChange={(n) => {
 					editor.setName(n)
@@ -117,18 +146,24 @@ function EditorInner({
 				}}
 				isDirty={editor.isDirty}
 				saving={editor.saving}
+				nodeCount={editor.nodes.length}
+				edgeCount={editor.edges.length}
+				showMiniMap={showMiniMap}
+				onToggleMiniMap={() => setShowMiniMap((v) => !v)}
+				onFitView={() => fitView({ padding: 0.1 })}
 				onSave={() => void editor.save()}
 				onRun={() => void handleRun()}
 				onAiGenerate={() => editor.setAiPanelOpen(true)}
 			/>
 
 			<div className="flex flex-1 overflow-hidden">
-				<NodeLibrary />
+				<NodeLibrary onAddNode={editor.addNode} canvasRef={canvasRef} />
 
-				<div className="flex-1 overflow-hidden">
+				<div ref={canvasRef} className="flex-1 overflow-hidden">
 					<WorkflowCanvas
 						nodes={editor.nodes}
 						edges={editor.edges}
+						showMiniMap={showMiniMap}
 						onNodesChange={(changes) => {
 							editor.onNodesChange(changes)
 							editor.markDirty()
@@ -141,6 +176,7 @@ function EditorInner({
 						onNodeClick={(id) => editor.setSelectedNodeId(id)}
 						onPaneClick={() => editor.setSelectedNodeId(null)}
 						onAddNode={editor.addNode}
+						onLoadTemplate={editor.loadTemplate}
 					/>
 				</div>
 
@@ -150,6 +186,8 @@ function EditorInner({
 						onUpdate={(data) =>
 							editor.updateNodeData(editor.selectedNodeId!, data)
 						}
+						onClose={() => editor.setSelectedNodeId(null)}
+						onDelete={(id) => editor.deleteNode(id)}
 						allNodes={editor.nodes}
 					/>
 				)}
