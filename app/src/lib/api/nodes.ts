@@ -1,3 +1,13 @@
+export interface NodePropertySchema {
+	type: string
+	description?: string
+	default?: unknown
+	enum?: string[]
+	minimum?: number
+	/** Custom field type hint: "password" masks input; "code" uses monospace editor. */
+	"x-field-type"?: "password" | "code"
+}
+
 export interface NodeManifest {
 	type: string
 	label: string
@@ -5,16 +15,7 @@ export interface NodeManifest {
 	category?: string
 	configSchema: {
 		type: string
-		properties: Record<
-			string,
-			{
-				type: string
-				description?: string
-				default?: unknown
-				enum?: string[]
-				minimum?: number
-			}
-		>
+		properties: Record<string, NodePropertySchema>
 		required?: string[]
 	}
 	outputSchema: unknown

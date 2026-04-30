@@ -52,6 +52,8 @@ export interface GenericNodeData extends Record<string, unknown> {
 	label?: string
 	/** The original manifest type string (e.g. "http-request", "delay"). */
 	nodeType?: string
+	/** Set by the workflow editor when any schema-required field is empty. */
+	_hasRequiredUnset?: boolean
 }
 
 // ── Union types ───────────────────────────────────────────────────────────────

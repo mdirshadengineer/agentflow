@@ -12,7 +12,7 @@ import {
 import { useCallback, useState } from "react"
 import "@xyflow/react/dist/style.css"
 import type { Connection, EdgeChange, EdgeProps, NodeChange } from "@xyflow/react"
-import { LayoutTemplateIcon } from "lucide-react"
+import { AlertTriangleIcon, LayoutTemplateIcon, ZapIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { WorkflowEdge, WorkflowNode } from "@/types/workflow"
 import { AgentNode } from "./nodes/AgentNode"
@@ -156,6 +156,8 @@ export function WorkflowCanvas({
 	)
 
 	const isEmpty = nodes.length === 0
+	const hasTrigger = nodes.some((n) => n.type === "trigger")
+	const showNoTriggerWarning = !isEmpty && !hasTrigger
 
 	return (
 		<div className="relative size-full">
@@ -186,10 +188,15 @@ export function WorkflowCanvas({
 					className="absolute inset-0 flex flex-col items-center justify-center gap-3 pointer-events-none"
 					aria-label="Empty canvas"
 				>
-					<p className="text-sm text-muted-foreground text-center max-w-xs">
-						Drag a node from the left panel or click a node type to start
-						building.
-					</p>
+					<ZapIcon className="size-8 text-muted-foreground/40" aria-hidden="true" />
+					<div className="text-center">
+						<p className="text-sm font-medium text-muted-foreground">
+							Start by dragging a Trigger node
+						</p>
+						<p className="text-xs text-muted-foreground/70 mt-0.5">
+							Every workflow needs a trigger to define when it runs.
+						</p>
+					</div>
 					<Button
 						variant="outline"
 						size="sm"
@@ -199,6 +206,20 @@ export function WorkflowCanvas({
 						<LayoutTemplateIcon className="size-3.5" />
 						Start from template
 					</Button>
+				</div>
+			)}
+
+			{/* Warning banner when nodes exist but no trigger is present */}
+			{showNoTriggerWarning && (
+				<div
+					className="absolute top-2 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-400 shadow-sm pointer-events-none"
+					role="alert"
+				>
+					<AlertTriangleIcon className="size-3.5 shrink-0" />
+					<span>
+						No trigger node — add a <strong>Trigger</strong> from the left panel
+						to enable running this workflow.
+					</span>
 				</div>
 			)}
 		</div>
