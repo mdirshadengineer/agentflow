@@ -128,14 +128,18 @@ const addNode = useCallback(
 (type: string, position: { x: number; y: number }) => {
 const id = crypto.randomUUID()
 
-// Handle trigger variants encoded as "trigger-manual" / "trigger-scheduled" / "trigger-webhook"
+// Trigger variant mapping: "trigger-manual" / "trigger-scheduled" / "trigger-webhook"
+const TRIGGER_VARIANT_MAP: Record<string, "manual" | "scheduled" | "webhook"> = {
+"trigger-manual": "manual",
+"trigger-scheduled": "scheduled",
+"trigger-webhook": "webhook",
+}
 let rfType = type
 let data: object
 
-if (type === "trigger-manual" || type === "trigger-scheduled" || type === "trigger-webhook") {
-const triggerType = type.replace("trigger-", "") as "manual" | "scheduled" | "webhook"
+if (type in TRIGGER_VARIANT_MAP) {
 rfType = "trigger"
-data = { label: "Trigger", triggerType }
+data = { label: "Trigger", triggerType: TRIGGER_VARIANT_MAP[type] }
 } else {
 const knownDefaults: Record<WorkflowNodeType, object> = {
 trigger: { label: "Trigger", triggerType: "manual" },

@@ -188,7 +188,7 @@ export function WorkflowCanvas({
 					className="absolute inset-0 flex flex-col items-center justify-center gap-3 pointer-events-none"
 					aria-label="Empty canvas"
 				>
-					<ZapIcon className="size-8 text-muted-foreground/40" />
+					<ZapIcon className="size-8 text-muted-foreground/40" aria-hidden="true" />
 					<div className="text-center">
 						<p className="text-sm font-medium text-muted-foreground">
 							Start by dragging a Trigger node
