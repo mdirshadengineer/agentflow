@@ -56,6 +56,9 @@ export const workflowRuns = sqliteTable("workflow_runs", {
 	})
 		.notNull()
 		.default("queued"),
+	createdAt: integer("created_at", { mode: "timestamp_ms" })
+		.notNull()
+		.default(sql`(unixepoch('now') * 1000)`),
 	startedAt: integer("started_at", { mode: "timestamp_ms" }),
 	finishedAt: integer("finished_at", { mode: "timestamp_ms" }),
 	output: text("output"),

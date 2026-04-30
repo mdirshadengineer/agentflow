@@ -27,10 +27,11 @@ describe("WorkflowStep type (re-export from @mdirshadengineer/agentflow-core)", 
 });
 
 describe("createWorker()", () => {
-	it("returns an object with start and stop methods", () => {
+	it("returns an object with start, stop, and poll methods", () => {
 		const worker = createWorker();
 		expect(typeof worker.start).toBe("function");
 		expect(typeof worker.stop).toBe("function");
+		expect(typeof worker.poll).toBe("function");
 	});
 
 	it("stop() resolves immediately when not started", async () => {
@@ -41,7 +42,14 @@ describe("createWorker()", () => {
 	it("stop() after start() clears the timer and resolves", async () => {
 		const clearTimeoutSpy = vi.spyOn(globalThis, "clearTimeout");
 
-		// Mock poll so no real DB calls happen
+		// Mock setTimeout so the scheduled interval never fires a real DB call.
+		// start() will call poll() immediately (which hits the SqliteWorkflowQueue),
+		// so we also need to stub the queue's poll method via the module.
+		const { SqliteWorkflowQueue } = await import("../sqlite-workflow-queue.js");
+		const pollStub = vi
+			.spyOn(SqliteWorkflowQueue.prototype, "poll")
+			.mockResolvedValue([]);
+
 		const setTimeoutSpy = vi
 			.spyOn(globalThis, "setTimeout")
 			.mockImplementation(
@@ -55,6 +63,7 @@ describe("createWorker()", () => {
 		// Timer should have been cleared after stop
 		expect(clearTimeoutSpy).toHaveBeenCalledWith(42);
 
+		pollStub.mockRestore();
 		setTimeoutSpy.mockRestore();
 		clearTimeoutSpy.mockRestore();
 	});

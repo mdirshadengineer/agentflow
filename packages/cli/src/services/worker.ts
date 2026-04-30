@@ -112,6 +112,13 @@ function createWorker() {
 	return {
 		start: async () => {
 			running = true;
+			// Run one poll immediately so any runs enqueued before startup are
+			// picked up without waiting for the first scheduled interval.
+			try {
+				await poll();
+			} catch (err) {
+				console.error("[worker] Unexpected poll error on start:", err);
+			}
 			scheduleNext();
 		},
 		stop: async () => {
@@ -121,6 +128,8 @@ function createWorker() {
 				timer = undefined;
 			}
 		},
+		/** Exposed for testing: drive a single poll cycle synchronously. */
+		poll,
 	};
 }
 

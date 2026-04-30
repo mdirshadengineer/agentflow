@@ -8,6 +8,7 @@ import {
 	workflows,
 } from "../../../../db/index.js";
 import { requireAuth } from "../../../middleware/auth.js";
+import { SqliteWorkflowQueue } from "../../../../services/sqlite-workflow-queue.js";
 
 /** Polling interval for SSE log streams, in milliseconds. */
 const SSE_POLL_INTERVAL_MS = 500;
@@ -193,14 +194,8 @@ export default async function workflowsRoutes(fastify: FastifyInstance) {
 				return reply.code(404).send({ error: "Workflow not found" });
 			}
 
-			const runId = randomUUID();
-			db.insert(workflowRuns)
-				.values({
-					id: runId,
-					workflowId: id,
-					status: "queued",
-				})
-				.run();
+			const queue = new SqliteWorkflowQueue();
+			const runId = await queue.enqueue(id);
 
 			const run = db
 				.select()
