@@ -148,6 +148,45 @@ describe("buildDag()", () => {
 			expect(result.steps).toHaveLength(1);
 			expect(result.steps?.[0]).not.toHaveProperty("dependsOn");
 		});
+
+		it("resolves 'generic' canvas node type to data.nodeType for execution", () => {
+			const result = buildDag({
+				nodes: [
+					{
+						id: "n1",
+						type: "generic",
+						data: { nodeType: "http-request", label: "HTTP Request", url: "https://example.com" },
+					},
+				],
+				edges: [],
+			});
+			expect(result.steps?.[0]?.type).toBe("http-request");
+		});
+
+		it("strips label and nodeType from config when resolving a generic node", () => {
+			const result = buildDag({
+				nodes: [
+					{
+						id: "n1",
+						type: "generic",
+						data: { nodeType: "http-request", label: "My HTTP", url: "https://example.com" },
+					},
+				],
+				edges: [],
+			});
+			const config = result.steps?.[0]?.config ?? {};
+			expect(config).not.toHaveProperty("nodeType");
+			expect(config).not.toHaveProperty("label");
+			expect(config.url).toBe("https://example.com");
+		});
+
+		it("keeps type as 'generic' when nodeType is absent or empty", () => {
+			const result = buildDag({
+				nodes: [{ id: "n1", type: "generic", data: { label: "Unknown" } }],
+				edges: [],
+			});
+			expect(result.steps?.[0]?.type).toBe("generic");
+		});
 	});
 
 	describe("cron trigger extraction", () => {

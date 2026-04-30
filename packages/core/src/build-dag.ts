@@ -70,13 +70,27 @@ export function buildDag(raw: unknown): WorkflowDefinition {
 		}
 
 		// Every canvas node becomes a workflow step.
+		// Canvas nodes for manifest-based types are stored with type "generic" by
+		// React Flow; the real executor type is kept in node.data.nodeType.
 		// Unknown types (e.g. "trigger") fall back to a no-op in the registry.
 		const steps: WorkflowStep[] = nodes.map((node) => {
 			const deps = dependencyMap.get(node.id) ?? [];
+
+			// Resolve the actual execution type for "generic" canvas nodes.
+			const resolvedType =
+				node.type === "generic" &&
+				typeof node.data.nodeType === "string" &&
+				node.data.nodeType.length > 0
+					? node.data.nodeType
+					: node.type;
+
+			// Strip canvas-only metadata keys from the config sent to the executor.
+			const { label: _label, nodeType: _nodeType, ...config } = node.data;
+
 			return {
 				name: node.id,
-				type: node.type,
-				config: node.data,
+				type: resolvedType,
+				config,
 				...(deps.length > 0 ? { dependsOn: deps } : {}),
 			};
 		});

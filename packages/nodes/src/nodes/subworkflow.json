@@ -1,0 +1,32 @@
+{
+	"type": "subworkflow",
+	"label": "Sub-Workflow",
+	"description": "Executes an embedded workflow definition as a nested sub-step and returns its combined step outputs.",
+	"configSchema": {
+		"type": "object",
+		"properties": {
+			"definition": {
+				"type": "object",
+				"description": "An inline workflow definition object ({ steps: [...] } or { nodes: [...], edges: [...] }). Paste a workflow definition exported from the editor."
+			},
+			"inputs": {
+				"type": "object",
+				"description": "Optional key-value pairs merged into the first step's config as initial data."
+			}
+		},
+		"required": ["definition"]
+	},
+	"outputSchema": {
+		"type": "object",
+		"properties": {
+			"stepOutputs": {
+				"type": "object",
+				"description": "An object containing each sub-step's output keyed by step name."
+			},
+			"status": {
+				"type": "string",
+				"description": "Final status of the sub-workflow: 'success' or 'failed'."
+			}
+		}
+	}
+}

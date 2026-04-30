@@ -5,10 +5,14 @@ import {
 	ChevronRightSquareIcon,
 	CircleIcon,
 	ClockIcon,
+	CodeIcon,
+	FilterIcon,
 	FlagIcon,
 	GitBranchIcon,
 	GlobeIcon,
+	LayersIcon,
 	ScrollIcon,
+	WrenchIcon,
 	ZapIcon,
 } from "lucide-react"
 import { type DragEvent, useEffect, useState } from "react"
@@ -77,6 +81,14 @@ function iconForType(type: string): React.ElementType {
 			return ScrollIcon
 		case "noop":
 			return CircleIcon
+		case "transform":
+			return WrenchIcon
+		case "json-extract":
+			return CodeIcon
+		case "filter":
+			return FilterIcon
+		case "subworkflow":
+			return LayersIcon
 		default:
 			return BoxIcon
 	}
@@ -101,6 +113,14 @@ function colorForType(type: string): string {
 			return "text-slate-600 bg-slate-500/10 border-slate-500/30"
 		case "noop":
 			return "text-gray-600 bg-gray-500/10 border-gray-500/30"
+		case "transform":
+			return "text-indigo-600 bg-indigo-500/10 border-indigo-500/30"
+		case "json-extract":
+			return "text-teal-600 bg-teal-500/10 border-teal-500/30"
+		case "filter":
+			return "text-rose-600 bg-rose-500/10 border-rose-500/30"
+		case "subworkflow":
+			return "text-violet-600 bg-violet-500/10 border-violet-500/30"
 		default:
 			return "text-gray-600 bg-gray-500/10 border-gray-500/30"
 	}
