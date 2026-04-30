@@ -71,7 +71,8 @@ export function VariableInput({
 	placeholder,
 	className,
 }: VariableInputProps) {
-	const inputRef = useRef<HTMLInputElement & HTMLTextAreaElement>(null)
+	// We need selectionStart / setSelectionRange which exist on both element types
+	const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null)
 	const [suggestions, setSuggestions] = useState<
 		{ node: WorkflowNode; label: string; variable: string }[]
 	>([])
@@ -145,7 +146,6 @@ export function VariableInput({
 	const open = suggestions.length > 0
 
 	const sharedProps = {
-		ref: inputRef as React.RefObject<HTMLInputElement & HTMLTextAreaElement>,
 		value,
 		onChange: handleChange,
 		onKeyDown: handleKeyDown,

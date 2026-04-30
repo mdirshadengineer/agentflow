@@ -17,6 +17,9 @@ import { cn } from "@/lib/utils"
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
+/** Placeholder to preserve column alignment when timestamp is absent. */
+const EMPTY_TIMESTAMP = " ".repeat(12) // matches HH:MM:SS.mmm length
+
 function statusColor(status: string): string {
 	if (status === "success") return "text-green-400"
 	if (status === "failed") return "text-red-400"
@@ -50,7 +53,7 @@ function formatDuration(
 }
 
 function formatTs(ms: number | null): string {
-	if (!ms) return "         "
+	if (!ms) return EMPTY_TIMESTAMP
 	return new Date(ms).toISOString().slice(11, 23)
 }
 

@@ -12,11 +12,16 @@ import {
 import { SqliteWorkflowQueue } from "../../../../services/sqlite-workflow-queue.js";
 import { requireAuth } from "../../../middleware/auth.js";
 
-// Ensure all built-in node executors are registered
+// Ensure all built-in node executors are registered.
+// registerAll throws if any executor type is already registered (e.g., because
+// worker.ts imported and registered them first). We only suppress that specific
+// duplicate-registration scenario; any other error is re-thrown.
 try {
 	registerAll(defaultNodeRegistry);
-} catch {
-	/* already registered */
+} catch (err) {
+	if (!(err instanceof Error && err.message.includes("already registered"))) {
+		throw err;
+	}
 }
 
 /** Polling interval for SSE log streams, in milliseconds. */
