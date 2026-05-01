@@ -1,17 +1,21 @@
 {
 	"type": "subworkflow",
+	"version": 1,
 	"label": "Sub-Workflow",
 	"description": "Executes an embedded workflow definition as a nested sub-step and returns its combined step outputs.",
+	"category": "Control Flow",
 	"configSchema": {
 		"type": "object",
 		"properties": {
 			"definition": {
 				"type": "object",
-				"description": "An inline workflow definition object ({ steps: [...] } or { nodes: [...], edges: [...] }). Paste a workflow definition exported from the editor."
+				"description": "An inline workflow definition object ({ steps: [...] } or { nodes: [...], edges: [...] }). Paste a workflow definition exported from the editor.",
+				"x-field-type": "json-editor"
 			},
 			"inputs": {
 				"type": "object",
-				"description": "Optional key-value pairs merged into the first step's config as initial data."
+				"description": "Optional key-value pairs merged into the first step's config as initial data.",
+				"x-field-type": "key-value"
 			}
 		},
 		"required": ["definition"]

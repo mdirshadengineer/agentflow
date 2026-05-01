@@ -1,7 +1,9 @@
 {
 	"type": "log",
+	"version": 1,
 	"label": "Log",
 	"description": "Emits a message to the step log and passes it through as output.",
+	"category": "Utility",
 	"configSchema": {
 		"type": "object",
 		"properties": {

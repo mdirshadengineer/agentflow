@@ -5,6 +5,11 @@ export type {
 	CanvasWorkflowDefinition,
 } from "./build-dag.js";
 export { buildDag } from "./build-dag.js";
+// ── Expression resolver ───────────────────────────────────────────────────────
+export {
+	findUnresolvedRefs,
+	resolveExpressions,
+} from "./expression-resolver.js";
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 // ── LLM providers ─────────────────────────────────────────────────────────────
@@ -40,10 +45,13 @@ export type {
 	LLMToolResponse,
 	LogEvent,
 	NodeInput,
+	NodeManifestLike,
 	NodeOutput,
+	NodePlugin,
 	QueuedRun,
 	RunStatus,
 	StepLog,
+	StepRetryPolicy,
 	StepStatus,
 	ToolCall,
 	WorkflowDefinition,

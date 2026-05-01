@@ -32,16 +32,41 @@ export interface ExecutionContext {
 
 // ── Workflow definition types ─────────────────────────────────────────────────
 
+/** Retry policy for a workflow step. */
+export interface StepRetryPolicy {
+	/** Maximum number of total attempts (including the first). Must be ≥ 1. */
+	maxAttempts: number;
+	/** Base delay between attempts in milliseconds. */
+	delayMs: number;
+	/** Backoff strategy: linear keeps `delayMs` constant; exponential doubles it each attempt. */
+	backoff?: "linear" | "exponential";
+}
+
 /** A single step in the workflow execution graph. */
 export interface WorkflowStep {
 	/** Unique name used to identify the step and as a dependency reference. */
 	name: string;
 	/** Step type — determines which NodeExecutor handles it. */
 	type: string;
+	/** Node definition version used when this step was saved (omit = latest). */
+	version?: number;
 	/** Type-specific configuration passed verbatim to the executor. */
 	config?: Record<string, unknown>;
 	/** Names of steps that must complete before this step runs. */
 	dependsOn?: string[];
+	/** Retry policy — when omitted the step is attempted exactly once. */
+	retry?: StepRetryPolicy;
+	/**
+	 * When true, downstream steps are not skipped even if this step fails.
+	 * Defaults to false (fail-fast propagation).
+	 */
+	continueOnFail?: boolean;
+	/**
+	 * Maximum execution time in milliseconds.
+	 * When exceeded the step is treated as failed with a timeout error.
+	 * Omit to disable the timeout.
+	 */
+	timeout?: number;
 }
 
 /** The execution-format workflow definition consumed by WorkflowExecutor. */
@@ -135,4 +160,40 @@ export interface LogEvent {
 	timestamp: Date;
 	logs?: string;
 	status?: StepStatus;
+}
+
+// ── Plugin types ──────────────────────────────────────────────────────────────
+
+/**
+ * Minimal manifest shape expected by the plugin interface.
+ * The full `NodeManifest` type lives in `packages/nodes` which must not be
+ * imported here to avoid a circular dependency.
+ */
+export interface NodeManifestLike {
+	type: string;
+	label: string;
+	description: string;
+	[key: string]: unknown;
+}
+
+/**
+ * Contract for a node plugin package.
+ *
+ * A plugin exposes its manifests so the server can return them via
+ * `GET /api/v1/nodes`, and a `register()` function that adds its executor
+ * implementations to the shared {@link NodeRegistry}.
+ *
+ * ```ts
+ * import type { NodePlugin } from "@mdirshadengineer/agentflow-core";
+ * export const myPlugin: NodePlugin = {
+ *   manifests: [myManifest],
+ *   register(registry) { registry.register("my-type", myExecutor); },
+ * };
+ * ```
+ */
+export interface NodePlugin {
+	/** Static manifest metadata for every node type provided by this plugin. */
+	manifests: NodeManifestLike[];
+	/** Register executor implementations into the given registry. */
+	register(registry: import("./node-registry.js").NodeRegistry): void;
 }

@@ -1,7 +1,9 @@
 {
 	"type": "json-extract",
+	"version": 1,
 	"label": "JSON Extract",
 	"description": "Extracts a nested value from a previous step's output data using a dot-notation path.",
+	"category": "Data",
 	"configSchema": {
 		"type": "object",
 		"properties": {
