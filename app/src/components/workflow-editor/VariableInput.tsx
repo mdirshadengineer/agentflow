@@ -54,7 +54,9 @@ function flattenPaths(
 		return results
 	}
 	const entries = Array.isArray(obj)
-		? (obj as unknown[]).slice(0, MAX_ARRAY_PREVIEW_ITEMS).map((v, i) => [String(i), v] as const)
+		? (obj as unknown[])
+				.slice(0, MAX_ARRAY_PREVIEW_ITEMS)
+				.map((v, i) => [String(i), v] as const)
 		: (Object.entries(obj as Record<string, unknown>) as [string, unknown][])
 	for (const [k, v] of entries) {
 		if (results.length >= MAX_SUGGESTIONS) break
@@ -77,7 +79,9 @@ function formatValueHint(value: unknown): string {
 			: `"${value}"`
 	}
 	if (typeof value === "object") {
-		return Array.isArray(value) ? `[${(value as unknown[]).length} items]` : "{…}"
+		return Array.isArray(value)
+			? `[${(value as unknown[]).length} items]`
+			: "{…}"
 	}
 	return String(value)
 }
@@ -114,7 +118,12 @@ function getSuggestions(
 			// Include the base expression (full output object)
 			const baseVar = nodeBaseVar(lbl)
 			if (typed === "" || baseVar.toLowerCase().includes(typed)) {
-				suggestions.push({ node: n, label: lbl, variable: baseVar, valueHint: "{…}" })
+				suggestions.push({
+					node: n,
+					label: lbl,
+					variable: baseVar,
+					valueHint: "{…}",
+				})
 			}
 			// Add one entry per flattened path in the output
 			const paths = flattenPaths(outputData)

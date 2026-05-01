@@ -391,7 +391,7 @@ function NodeNavPill({
 			className={cn(
 				"flex items-center gap-1.5 rounded-md border px-2 py-1 text-[10px] font-medium",
 				"transition-colors hover:bg-accent hover:border-accent-foreground/20",
-				"max-w-[120px] truncate",
+				"max-w-30 truncate",
 				colorCls
 			)}
 		>
@@ -454,7 +454,10 @@ export function NodeConfigModal({
 		setParamTab("parameters")
 	}, [node?.id])
 
-	const handleTestComplete = (nodeId: string, data: Record<string, unknown>) => {
+	const handleTestComplete = (
+		nodeId: string,
+		data: Record<string, unknown>
+	) => {
 		setNodeOutputs((prev) => new Map(prev).set(nodeId, data))
 	}
 
@@ -482,8 +485,12 @@ export function NodeConfigModal({
 	// Adjacent nodes for navigation
 	const prevNodeId = edges.find((e) => e.target === node.id)?.source ?? null
 	const nextNodeId = edges.find((e) => e.source === node.id)?.target ?? null
-	const prevNode = prevNodeId ? (allNodes.find((n) => n.id === prevNodeId) ?? null) : null
-	const nextNode = nextNodeId ? (allNodes.find((n) => n.id === nextNodeId) ?? null) : null
+	const prevNode = prevNodeId
+		? (allNodes.find((n) => n.id === prevNodeId) ?? null)
+		: null
+	const nextNode = nextNodeId
+		? (allNodes.find((n) => n.id === nextNodeId) ?? null)
+		: null
 
 	const navigateTo = (targetNode: WorkflowNode, direction: -1 | 1) => {
 		navDirectionRef.current = direction
@@ -593,7 +600,10 @@ export function NodeConfigModal({
 				<AnimatePresence mode="wait" initial={false}>
 					<motion.div
 						key={node.id}
-						initial={{ opacity: 0, x: navDirectionRef.current * SLIDE_DISTANCE }}
+						initial={{
+							opacity: 0,
+							x: navDirectionRef.current * SLIDE_DISTANCE,
+						}}
 						animate={{ opacity: 1, x: 0 }}
 						exit={{ opacity: 0, x: navDirectionRef.current * -SLIDE_DISTANCE }}
 						transition={{ duration: TRANSITION_DURATION, ease: "easeInOut" }}
