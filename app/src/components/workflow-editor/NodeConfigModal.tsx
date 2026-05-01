@@ -453,7 +453,7 @@ export function NodeConfigModal({
 				</DialogHeader>
 
 				{/* Three-column body */}
-				<div className="grid grid-cols-[1fr_1.6fr_1fr] divide-x overflow-hidden max-h-[85vh]">
+				<div className="grid grid-cols-[1fr_1.6fr_1fr] divide-x overflow-hidden h-[80vh]">
 					{/* ── Column 1: Input ── */}
 					<div className="flex flex-col overflow-hidden">
 						<div className="px-4 py-2.5 border-b bg-muted/20 shrink-0 flex items-center gap-2">
