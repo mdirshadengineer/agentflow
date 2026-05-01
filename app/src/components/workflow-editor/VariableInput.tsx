@@ -13,6 +13,10 @@ import type { WorkflowNode } from "@/types/workflow"
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
+const MAX_SUGGESTIONS = 20
+const MAX_ARRAY_PREVIEW_ITEMS = 3
+const MAX_STRING_HINT_LENGTH = 30
+
 /** Build the base variable expression for a node. */
 function nodeBaseVar(label: string): string {
 	return `{{ steps.${label}.output }}`
@@ -44,16 +48,16 @@ function flattenPaths(
 	depth = 2,
 	results: Array<{ path: string; value: unknown }> = []
 ): Array<{ path: string; value: unknown }> {
-	if (results.length >= 20) return results
+	if (results.length >= MAX_SUGGESTIONS) return results
 	if (depth === 0 || typeof obj !== "object" || obj === null) {
 		if (prefix) results.push({ path: prefix, value: obj })
 		return results
 	}
 	const entries = Array.isArray(obj)
-		? (obj as unknown[]).slice(0, 3).map((v, i) => [String(i), v] as const)
+		? (obj as unknown[]).slice(0, MAX_ARRAY_PREVIEW_ITEMS).map((v, i) => [String(i), v] as const)
 		: (Object.entries(obj as Record<string, unknown>) as [string, unknown][])
 	for (const [k, v] of entries) {
-		if (results.length >= 20) break
+		if (results.length >= MAX_SUGGESTIONS) break
 		const newPath = prefix ? `${prefix}.${k}` : k
 		results.push({ path: newPath, value: v })
 		if (typeof v === "object" && v !== null && depth > 1) {
@@ -68,7 +72,9 @@ function formatValueHint(value: unknown): string {
 	if (value === null) return "null"
 	if (value === undefined) return ""
 	if (typeof value === "string") {
-		return value.length > 30 ? `"${value.slice(0, 30)}…"` : `"${value}"`
+		return value.length > MAX_STRING_HINT_LENGTH
+			? `"${value.slice(0, MAX_STRING_HINT_LENGTH)}…"`
+			: `"${value}"`
 	}
 	if (typeof value === "object") {
 		return Array.isArray(value) ? `[${(value as unknown[]).length} items]` : "{…}"

@@ -47,6 +47,12 @@ import {
 	TestResultPanel,
 } from "./NodeConfigForm"
 
+// ── Constants ─────────────────────────────────────────────────────────────────
+
+const NAV_PILL_WIDTH = "w-[130px]"
+const SLIDE_DISTANCE = 24
+const TRANSITION_DURATION = 0.18
+
 // ── Icon helpers ───────────────────────────────────────────────────────────────
 
 const NODE_TYPE_ICONS: Record<string, React.ElementType> = {
@@ -509,7 +515,7 @@ export function NodeConfigModal({
 				{/* Modal header */}
 				<DialogHeader className="flex-row items-center gap-2 px-3 py-2.5 border-b shrink-0 bg-muted/20">
 					{/* Prev node navigation */}
-					<div className="w-[130px] shrink-0 flex justify-start">
+					<div className={cn(NAV_PILL_WIDTH, "shrink-0 flex justify-start")}>
 						{prevNode && onSelectNode ? (
 							<NodeNavPill
 								node={prevNode}
@@ -517,7 +523,7 @@ export function NodeConfigModal({
 								onClick={() => navigateTo(prevNode, -1)}
 							/>
 						) : (
-							<div className="w-[130px]" />
+							<div className={NAV_PILL_WIDTH} />
 						)}
 					</div>
 
@@ -547,7 +553,7 @@ export function NodeConfigModal({
 					</div>
 
 					{/* Next node navigation */}
-					<div className="w-[130px] shrink-0 flex justify-end">
+					<div className={cn(NAV_PILL_WIDTH, "shrink-0 flex justify-end")}>
 						{nextNode && onSelectNode ? (
 							<NodeNavPill
 								node={nextNode}
@@ -555,7 +561,7 @@ export function NodeConfigModal({
 								onClick={() => navigateTo(nextNode, 1)}
 							/>
 						) : (
-							<div className="w-[130px]" />
+							<div className={NAV_PILL_WIDTH} />
 						)}
 					</div>
 
@@ -587,10 +593,10 @@ export function NodeConfigModal({
 				<AnimatePresence mode="wait" initial={false}>
 					<motion.div
 						key={node.id}
-						initial={{ opacity: 0, x: navDirectionRef.current * 24 }}
+						initial={{ opacity: 0, x: navDirectionRef.current * SLIDE_DISTANCE }}
 						animate={{ opacity: 1, x: 0 }}
-						exit={{ opacity: 0, x: navDirectionRef.current * -24 }}
-						transition={{ duration: 0.18, ease: "easeInOut" }}
+						exit={{ opacity: 0, x: navDirectionRef.current * -SLIDE_DISTANCE }}
+						transition={{ duration: TRANSITION_DURATION, ease: "easeInOut" }}
 						className="grid grid-cols-[1fr_1.6fr_1fr] divide-x overflow-hidden h-[85vh]"
 					>
 						{/* ── Column 1: Input ── */}
