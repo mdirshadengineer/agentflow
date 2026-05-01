@@ -17,7 +17,6 @@ import {
 	TimerIcon,
 	WebhookIcon,
 	WrenchIcon,
-	ZapIcon,
 } from "lucide-react"
 import { type DragEvent, useEffect, useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
