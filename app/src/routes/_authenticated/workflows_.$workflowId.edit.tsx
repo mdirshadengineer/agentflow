@@ -193,6 +193,7 @@ function EditorInner({
 					}
 					onClose={() => editor.setSelectedNodeId(null)}
 					onDelete={(id) => editor.deleteNode(id)}
+					onSelectNode={(id) => editor.setSelectedNodeId(id)}
 					allNodes={editor.nodes}
 					edges={editor.edges}
 					workflowId={workflowId}

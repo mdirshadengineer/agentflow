@@ -5,6 +5,9 @@
  *   • Input   – upstream connected nodes + their output schema preview
  *   • Config  – label + type-specific config fields (NodeFormBody)
  *   • Output  – "Test step" button + live test result
+ *
+ * Navigation: clicking the prev/next node pills in the header transitions to
+ * the connected upstream/downstream node's config.
  */
 import {
 	AlertTriangleIcon,
@@ -12,6 +15,8 @@ import {
 	BotIcon,
 	BoxIcon,
 	CheckCircle2Icon,
+	ChevronLeftIcon,
+	ChevronRightIcon,
 	FlagIcon,
 	GitBranchIcon,
 	Loader2Icon,
@@ -22,7 +27,8 @@ import {
 	XIcon,
 	ZapIcon,
 } from "lucide-react"
-import { useEffect, useState } from "react"
+import { AnimatePresence, motion } from "motion/react"
+import { useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
 	Dialog,
@@ -40,6 +46,12 @@ import {
 	NodeFormBody,
 	TestResultPanel,
 } from "./NodeConfigForm"
+
+// ── Constants ─────────────────────────────────────────────────────────────────
+
+const NAV_PILL_WIDTH = "w-[130px]"
+const SLIDE_DISTANCE = 24
+const TRANSITION_DURATION = 0.18
 
 // ── Icon helpers ───────────────────────────────────────────────────────────────
 
@@ -66,11 +78,13 @@ function InputPanel({
 	allNodes,
 	edges,
 	manifests,
+	nodeOutputs,
 }: {
 	node: WorkflowNode
 	allNodes: WorkflowNode[]
 	edges: WorkflowEdge[]
 	manifests: NodeManifest[]
+	nodeOutputs?: Map<string, Record<string, unknown>>
 }) {
 	// Find nodes that connect TO this node (direct upstream)
 	const upstreamIds = new Set(
@@ -106,6 +120,8 @@ function InputPanel({
 				const TypeIcon = NODE_TYPE_ICONS[upstream.type] ?? BoxIcon
 				const colorCls =
 					NODE_TYPE_COLORS[upstream.type] ?? NODE_TYPE_COLORS.generic
+
+				const outputData = nodeOutputs?.get(upstream.id)
 
 				const outputProps = manifest?.outputSchema
 					? Object.entries(
@@ -143,8 +159,26 @@ function InputPanel({
 							</span>
 						</div>
 
-						{/* Output schema fields */}
-						{outputProps.length > 0 ? (
+						{/* If we have real output data, show it as JSON */}
+						{outputData ? (
+							<div className="px-3 py-2">
+								<p className="text-[9px] font-semibold text-muted-foreground/60 uppercase tracking-wider mb-1">
+									Last test output
+								</p>
+								<pre className="text-[10px] font-mono bg-background rounded px-2 py-1.5 whitespace-pre-wrap break-all overflow-auto max-h-48 border">
+									{JSON.stringify(outputData, null, 2)}
+								</pre>
+								<p className="text-[9px] text-muted-foreground/50 pt-1">
+									Reference via{" "}
+									<code className="font-mono">
+										{"{{ steps."}
+										{upstreamLabel}
+										{".output.field }}"}
+									</code>
+								</p>
+							</div>
+						) : outputProps.length > 0 ? (
+							/* Fall back to schema if no test data yet */
 							<div className="px-3 py-2 space-y-1">
 								{outputProps.map(([key, schema]) => (
 									<div key={key} className="flex items-start gap-1.5">
@@ -168,7 +202,7 @@ function InputPanel({
 							</div>
 						) : (
 							<p className="px-3 py-2 text-[10px] text-muted-foreground">
-								No output schema defined.
+								No output schema defined. Execute this node to preview data.
 							</p>
 						)}
 					</div>
@@ -184,10 +218,12 @@ function OutputPanel({
 	node,
 	manifests,
 	workflowId,
+	onTestComplete,
 }: {
 	node: WorkflowNode
 	manifests: NodeManifest[]
 	workflowId?: string
+	onTestComplete?: (nodeId: string, data: Record<string, unknown>) => void
 }) {
 	const [testing, setTesting] = useState(false)
 	const [testResult, setTestResult] = useState<NodeTestOutput | null>(null)
@@ -232,6 +268,9 @@ function OutputPanel({
 			delete config._hasRequiredUnset
 			const result = await testNode(workflowId, nodeType, config)
 			setTestResult(result)
+			if (result.status === "success") {
+				onTestComplete?.(node.id, result.data)
+			}
 		} catch (err) {
 			setTestResult({
 				status: "failed",
@@ -321,9 +360,54 @@ interface NodeConfigModalProps {
 	onClose: () => void
 	onUpdate: (data: Record<string, unknown>) => void
 	onDelete: (nodeId: string) => void
+	onSelectNode?: (id: string) => void
 	allNodes?: WorkflowNode[]
 	edges?: WorkflowEdge[]
 	workflowId?: string
+}
+
+/** Small pill button representing an adjacent node for navigation. */
+function NodeNavPill({
+	node,
+	direction,
+	onClick,
+}: {
+	node: WorkflowNode
+	direction: "prev" | "next"
+	onClick: () => void
+}) {
+	const type = node.type
+	const label =
+		(node.data as { label?: string }).label ??
+		type.charAt(0).toUpperCase() + type.slice(1)
+	const TypeIcon = NODE_TYPE_ICONS[type] ?? BoxIcon
+	const colorCls = NODE_TYPE_COLORS[type] ?? NODE_TYPE_COLORS.generic
+
+	return (
+		<button
+			type="button"
+			onClick={onClick}
+			title={`Go to ${label}`}
+			className={cn(
+				"flex items-center gap-1.5 rounded-md border px-2 py-1 text-[10px] font-medium",
+				"transition-colors hover:bg-accent hover:border-accent-foreground/20",
+				"max-w-[120px] truncate",
+				colorCls
+			)}
+		>
+			{direction === "prev" && <ChevronLeftIcon className="size-3 shrink-0" />}
+			<div
+				className={cn(
+					"size-4 shrink-0 flex items-center justify-center rounded border",
+					colorCls
+				)}
+			>
+				<TypeIcon className="size-2.5" />
+			</div>
+			<span className="truncate">{label}</span>
+			{direction === "next" && <ChevronRightIcon className="size-3 shrink-0" />}
+		</button>
+	)
 }
 
 export function NodeConfigModal({
@@ -332,6 +416,7 @@ export function NodeConfigModal({
 	onClose,
 	onUpdate,
 	onDelete,
+	onSelectNode,
 	allNodes = [],
 	edges = [],
 	workflowId,
@@ -341,6 +426,12 @@ export function NodeConfigModal({
 	const [paramTab, setParamTab] = useState<"parameters" | "description">(
 		"parameters"
 	)
+	// nodeId → last successful test output data
+	const [nodeOutputs, setNodeOutputs] = useState<
+		Map<string, Record<string, unknown>>
+	>(new Map())
+	// Track nav direction for slide animation: -1 = going left (prev), 1 = going right (next)
+	const navDirectionRef = useRef<-1 | 1>(1)
 
 	useEffect(() => {
 		listAgents()
@@ -363,6 +454,10 @@ export function NodeConfigModal({
 		setParamTab("parameters")
 	}, [node?.id])
 
+	const handleTestComplete = (nodeId: string, data: Record<string, unknown>) => {
+		setNodeOutputs((prev) => new Map(prev).set(nodeId, data))
+	}
+
 	if (!node) return null
 
 	const manifestType =
@@ -383,6 +478,17 @@ export function NodeConfigModal({
 
 	const TypeIcon = NODE_TYPE_ICONS[node.type] ?? BoxIcon
 	const colorCls = NODE_TYPE_COLORS[node.type] ?? NODE_TYPE_COLORS.generic
+
+	// Adjacent nodes for navigation
+	const prevNodeId = edges.find((e) => e.target === node.id)?.source ?? null
+	const nextNodeId = edges.find((e) => e.source === node.id)?.target ?? null
+	const prevNode = prevNodeId ? (allNodes.find((n) => n.id === prevNodeId) ?? null) : null
+	const nextNode = nextNodeId ? (allNodes.find((n) => n.id === nextNodeId) ?? null) : null
+
+	const navigateTo = (targetNode: WorkflowNode, direction: -1 | 1) => {
+		navDirectionRef.current = direction
+		onSelectNode?.(targetNode.id)
+	}
 
 	// Wrap onUpdate to keep _hasRequiredUnset in sync for generic nodes
 	const handleUpdate = (patch: Record<string, unknown>) => {
@@ -407,29 +513,60 @@ export function NodeConfigModal({
 				className="w-[95vw] p-0 overflow-hidden gap-0"
 			>
 				{/* Modal header */}
-				<DialogHeader className="flex-row items-center gap-3 px-4 py-3 border-b shrink-0 bg-muted/20">
-					<div
-						className={cn(
-							"size-8 shrink-0 flex items-center justify-center rounded-lg border-2",
-							colorCls
+				<DialogHeader className="flex-row items-center gap-2 px-3 py-2.5 border-b shrink-0 bg-muted/20">
+					{/* Prev node navigation */}
+					<div className={cn(NAV_PILL_WIDTH, "shrink-0 flex justify-start")}>
+						{prevNode && onSelectNode ? (
+							<NodeNavPill
+								node={prevNode}
+								direction="prev"
+								onClick={() => navigateTo(prevNode, -1)}
+							/>
+						) : (
+							<div className={NAV_PILL_WIDTH} />
 						)}
-					>
-						<TypeIcon className="size-4" />
 					</div>
-					<div className="flex-1 min-w-0">
-						<DialogTitle className="text-sm font-semibold truncate leading-tight">
-							{nodeLabel}
-						</DialogTitle>
-						<p className="text-[10px] text-muted-foreground leading-tight mt-0.5">
-							{manifestType} node
-							{manifest?.description && (
-								<span className="ml-1.5 text-muted-foreground/60">
-									— {manifest.description}
-								</span>
+
+					{/* Current node identity (centred) */}
+					<div className="flex flex-1 items-center justify-center gap-2 min-w-0">
+						<div
+							className={cn(
+								"size-8 shrink-0 flex items-center justify-center rounded-lg border-2",
+								colorCls
 							)}
-						</p>
+						>
+							<TypeIcon className="size-4" />
+						</div>
+						<div className="min-w-0">
+							<DialogTitle className="text-sm font-semibold truncate leading-tight">
+								{nodeLabel}
+							</DialogTitle>
+							<p className="text-[10px] text-muted-foreground leading-tight mt-0.5">
+								{manifestType} node
+								{manifest?.description && (
+									<span className="ml-1.5 text-muted-foreground/60">
+										— {manifest.description}
+									</span>
+								)}
+							</p>
+						</div>
 					</div>
-					<div className="flex items-center gap-2 ml-auto">
+
+					{/* Next node navigation */}
+					<div className={cn(NAV_PILL_WIDTH, "shrink-0 flex justify-end")}>
+						{nextNode && onSelectNode ? (
+							<NodeNavPill
+								node={nextNode}
+								direction="next"
+								onClick={() => navigateTo(nextNode, 1)}
+							/>
+						) : (
+							<div className={NAV_PILL_WIDTH} />
+						)}
+					</div>
+
+					{/* Actions */}
+					<div className="flex items-center gap-2 ml-2 shrink-0">
 						<Button
 							variant="ghost"
 							size="sm"
@@ -452,137 +589,149 @@ export function NodeConfigModal({
 					</div>
 				</DialogHeader>
 
-				{/* Three-column body */}
-				<div className="grid grid-cols-[1fr_1.6fr_1fr] divide-x overflow-hidden h-[85vh]">
-					{/* ── Column 1: Input ── */}
-					<div className="flex flex-col overflow-hidden">
-						<div className="px-4 py-2.5 border-b bg-muted/20 shrink-0 flex items-center gap-2">
-							<p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-								Input
-							</p>
-							<p className="text-[9px] text-muted-foreground/50 mt-px">
-								Data flowing into this node
-							</p>
+				{/* Three-column body — AnimatePresence animates node transitions */}
+				<AnimatePresence mode="wait" initial={false}>
+					<motion.div
+						key={node.id}
+						initial={{ opacity: 0, x: navDirectionRef.current * SLIDE_DISTANCE }}
+						animate={{ opacity: 1, x: 0 }}
+						exit={{ opacity: 0, x: navDirectionRef.current * -SLIDE_DISTANCE }}
+						transition={{ duration: TRANSITION_DURATION, ease: "easeInOut" }}
+						className="grid grid-cols-[1fr_1.6fr_1fr] divide-x overflow-hidden h-[85vh]"
+					>
+						{/* ── Column 1: Input ── */}
+						<div className="flex flex-col overflow-hidden">
+							<div className="px-4 py-2.5 border-b bg-muted/20 shrink-0 flex items-center gap-2">
+								<p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+									Input
+								</p>
+								<p className="text-[9px] text-muted-foreground/50 mt-px">
+									Data flowing into this node
+								</p>
+							</div>
+							<div className="flex-1 overflow-y-auto p-3">
+								<InputPanel
+									node={node}
+									allNodes={allNodes}
+									edges={edges}
+									manifests={manifests}
+									nodeOutputs={nodeOutputs}
+								/>
+							</div>
 						</div>
-						<div className="flex-1 overflow-y-auto p-3">
-							<InputPanel
-								node={node}
-								allNodes={allNodes}
-								edges={edges}
-								manifests={manifests}
-							/>
-						</div>
-					</div>
 
-					{/* ── Column 2: Parameters / Description tabs ── */}
-					<div className="flex flex-col overflow-hidden">
-						{/* Tab header */}
-						<div className="px-1 pt-1 border-b bg-muted/20 shrink-0 flex items-end gap-0">
-							<button
-								type="button"
-								onClick={() => setParamTab("parameters")}
-								className={cn(
-									"flex items-center gap-1.5 px-3 py-2 text-[11px] font-medium transition-colors border-b-2 -mb-px",
-									paramTab === "parameters"
-										? "text-primary border-primary"
-										: "text-muted-foreground border-transparent hover:text-foreground"
-								)}
-							>
-								<SlidersHorizontalIcon className="size-3" />
-								Parameters
-							</button>
-							{manifest?.description && (
+						{/* ── Column 2: Parameters / Description tabs ── */}
+						<div className="flex flex-col overflow-hidden">
+							{/* Tab header */}
+							<div className="px-1 pt-1 border-b bg-muted/20 shrink-0 flex items-end gap-0">
 								<button
 									type="button"
-									onClick={() => setParamTab("description")}
+									onClick={() => setParamTab("parameters")}
 									className={cn(
 										"flex items-center gap-1.5 px-3 py-2 text-[11px] font-medium transition-colors border-b-2 -mb-px",
-										paramTab === "description"
+										paramTab === "parameters"
 											? "text-primary border-primary"
 											: "text-muted-foreground border-transparent hover:text-foreground"
 									)}
 								>
-									<BookOpenIcon className="size-3" />
-									Docs
+									<SlidersHorizontalIcon className="size-3" />
+									Parameters
 								</button>
-							)}
-						</div>
-						<div className="flex-1 overflow-y-auto p-3">
-							{paramTab === "parameters" ? (
-								<NodeFormBody
-									node={node}
-									manifest={manifest}
-									agents={agents}
-									allNodes={allNodes}
-									onUpdate={handleUpdate}
-								/>
-							) : (
-								<div className="prose prose-sm max-w-none">
-									<p className="text-xs text-muted-foreground leading-relaxed">
-										{manifest?.description}
-									</p>
-									{manifest?.configSchema?.properties &&
-										Object.keys(manifest.configSchema.properties).length >
-											0 && (
-											<div className="mt-4 space-y-2">
-												<p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-													Configuration fields
-												</p>
-												{Object.entries(manifest.configSchema.properties).map(
-													([key, prop]) => (
-														<div
-															key={key}
-															className="rounded-md border bg-muted/30 px-3 py-2"
-														>
-															<div className="flex items-center gap-1.5">
-																<code className="text-[10px] font-mono text-primary">
-																	{key}
-																</code>
-																<span className="text-[9px] text-muted-foreground/60 bg-muted rounded px-1">
-																	{prop.type ?? "string"}
-																</span>
-																{manifest.configSchema.required?.includes(
-																	key
-																) && (
-																	<span className="text-[9px] text-destructive font-medium">
-																		required
+								{manifest?.description && (
+									<button
+										type="button"
+										onClick={() => setParamTab("description")}
+										className={cn(
+											"flex items-center gap-1.5 px-3 py-2 text-[11px] font-medium transition-colors border-b-2 -mb-px",
+											paramTab === "description"
+												? "text-primary border-primary"
+												: "text-muted-foreground border-transparent hover:text-foreground"
+										)}
+									>
+										<BookOpenIcon className="size-3" />
+										Docs
+									</button>
+								)}
+							</div>
+							<div className="flex-1 overflow-y-auto p-3">
+								{paramTab === "parameters" ? (
+									<NodeFormBody
+										node={node}
+										manifest={manifest}
+										agents={agents}
+										allNodes={allNodes}
+										onUpdate={handleUpdate}
+										upstreamOutputs={nodeOutputs}
+									/>
+								) : (
+									<div className="prose prose-sm max-w-none">
+										<p className="text-xs text-muted-foreground leading-relaxed">
+											{manifest?.description}
+										</p>
+										{manifest?.configSchema?.properties &&
+											Object.keys(manifest.configSchema.properties).length >
+												0 && (
+												<div className="mt-4 space-y-2">
+													<p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+														Configuration fields
+													</p>
+													{Object.entries(manifest.configSchema.properties).map(
+														([key, prop]) => (
+															<div
+																key={key}
+																className="rounded-md border bg-muted/30 px-3 py-2"
+															>
+																<div className="flex items-center gap-1.5">
+																	<code className="text-[10px] font-mono text-primary">
+																		{key}
+																	</code>
+																	<span className="text-[9px] text-muted-foreground/60 bg-muted rounded px-1">
+																		{prop.type ?? "string"}
 																	</span>
+																	{manifest.configSchema.required?.includes(
+																		key
+																	) && (
+																		<span className="text-[9px] text-destructive font-medium">
+																			required
+																		</span>
+																	)}
+																</div>
+																{prop.description && (
+																	<p className="text-[10px] text-muted-foreground mt-1">
+																		{prop.description}
+																	</p>
 																)}
 															</div>
-															{prop.description && (
-																<p className="text-[10px] text-muted-foreground mt-1">
-																	{prop.description}
-																</p>
-															)}
-														</div>
-													)
-												)}
-											</div>
-										)}
-								</div>
-							)}
+														)
+													)}
+												</div>
+											)}
+									</div>
+								)}
+							</div>
 						</div>
-					</div>
 
-					{/* ── Column 3: Output ── */}
-					<div className="flex flex-col overflow-hidden">
-						<div className="px-4 py-2.5 border-b bg-muted/20 shrink-0 flex items-center gap-2">
-							<p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-								Output
-							</p>
-							<p className="text-[9px] text-muted-foreground/50 mt-px">
-								Test result & data preview
-							</p>
+						{/* ── Column 3: Output ── */}
+						<div className="flex flex-col overflow-hidden">
+							<div className="px-4 py-2.5 border-b bg-muted/20 shrink-0 flex items-center gap-2">
+								<p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+									Output
+								</p>
+								<p className="text-[9px] text-muted-foreground/50 mt-px">
+									Test result & data preview
+								</p>
+							</div>
+							<div className="flex-1 overflow-y-auto p-3">
+								<OutputPanel
+									node={node}
+									manifests={manifests}
+									workflowId={workflowId}
+									onTestComplete={handleTestComplete}
+								/>
+							</div>
 						</div>
-						<div className="flex-1 overflow-y-auto p-3">
-							<OutputPanel
-								node={node}
-								manifests={manifests}
-								workflowId={workflowId}
-							/>
-						</div>
-					</div>
-				</div>
+					</motion.div>
+				</AnimatePresence>
 			</DialogContent>
 		</Dialog>
 	)
