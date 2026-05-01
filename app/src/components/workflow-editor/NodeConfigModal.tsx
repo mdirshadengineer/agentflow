@@ -404,7 +404,7 @@ export function NodeConfigModal({
 		<Dialog open={open} onOpenChange={(v) => !v && onClose()}>
 			<DialogContent
 				showCloseButton={false}
-				className="sm:max-w-5xl w-[90vw] p-0 overflow-hidden gap-0"
+				className="w-[95vw] p-0 overflow-hidden gap-0"
 			>
 				{/* Modal header */}
 				<DialogHeader className="flex-row items-center gap-3 px-4 py-3 border-b shrink-0 bg-muted/20">
@@ -453,7 +453,7 @@ export function NodeConfigModal({
 				</DialogHeader>
 
 				{/* Three-column body */}
-				<div className="grid grid-cols-[1fr_1.6fr_1fr] divide-x overflow-hidden h-[80vh]">
+				<div className="grid grid-cols-[1fr_1.6fr_1fr] divide-x overflow-hidden h-[85vh]">
 					{/* ── Column 1: Input ── */}
 					<div className="flex flex-col overflow-hidden">
 						<div className="px-4 py-2.5 border-b bg-muted/20 shrink-0 flex items-center gap-2">
