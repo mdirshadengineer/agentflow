@@ -510,7 +510,7 @@ export function NodeConfigModal({
 		<Dialog open={open} onOpenChange={(v) => !v && onClose()}>
 			<DialogContent
 				showCloseButton={false}
-				className="w-[95vw] p-0 overflow-hidden gap-0"
+				className="sm:max-w-[80vw] w-[95vw] p-0 overflow-hidden gap-0"
 			>
 				{/* Modal header */}
 				<DialogHeader className="flex-row items-center gap-2 px-3 py-2.5 border-b shrink-0 bg-muted/20">
