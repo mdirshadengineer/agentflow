@@ -245,7 +245,11 @@ describe("Workflow runs", () => {
 			cookies: { token: cookie },
 		});
 		expect(res.statusCode).toBe(201);
-		const body = res.json() as { id: string; status: string; workflowId: string };
+		const body = res.json() as {
+			id: string;
+			status: string;
+			workflowId: string;
+		};
 		expect(body.status).toBe("queued");
 		expect(body.workflowId).toBe(workflowId);
 	});

@@ -2,10 +2,7 @@
  * NodeConfigForm — shared form components used by both NodeConfigPanel (sidebar)
  * and NodeConfigModal (full-screen dialog).
  */
-import {
-	ChevronDownIcon,
-	ChevronRightIcon,
-} from "lucide-react"
+import { ChevronDownIcon, ChevronRightIcon } from "lucide-react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
@@ -86,7 +83,10 @@ function SchemaField({
 		<FieldLabel>
 			{fieldKey}
 			{required && (
-				<span className="ml-0.5 text-destructive font-bold" aria-label="required">
+				<span
+					className="ml-0.5 text-destructive font-bold"
+					aria-label="required"
+				>
 					*
 				</span>
 			)}
@@ -94,7 +94,9 @@ function SchemaField({
 	)
 
 	const inputRingCls =
-		required && isEmpty ? "ring-1 ring-destructive focus-visible:ring-destructive" : ""
+		required && isEmpty
+			? "ring-1 ring-destructive focus-visible:ring-destructive"
+			: ""
 
 	if (prop.enum) {
 		return (
@@ -116,7 +118,9 @@ function SchemaField({
 					</SelectContent>
 				</Select>
 				{prop.description && (
-					<p className="text-[10px] text-muted-foreground">{prop.description}</p>
+					<p className="text-[10px] text-muted-foreground">
+						{prop.description}
+					</p>
 				)}
 			</Field>
 		)
@@ -136,7 +140,9 @@ function SchemaField({
 					{label}
 				</div>
 				{prop.description && (
-					<p className="text-[10px] text-muted-foreground">{prop.description}</p>
+					<p className="text-[10px] text-muted-foreground">
+						{prop.description}
+					</p>
 				)}
 			</Field>
 		)
@@ -157,7 +163,9 @@ function SchemaField({
 					className={cn("h-7 text-xs", inputRingCls)}
 				/>
 				{prop.description && (
-					<p className="text-[10px] text-muted-foreground">{prop.description}</p>
+					<p className="text-[10px] text-muted-foreground">
+						{prop.description}
+					</p>
 				)}
 			</Field>
 		)
@@ -184,7 +192,9 @@ function SchemaField({
 					className={cn("text-xs font-mono", inputRingCls)}
 				/>
 				{prop.description && (
-					<p className="text-[10px] text-muted-foreground">{prop.description}</p>
+					<p className="text-[10px] text-muted-foreground">
+						{prop.description}
+					</p>
 				)}
 			</Field>
 		)
@@ -203,14 +213,19 @@ function SchemaField({
 					autoComplete="off"
 				/>
 				{prop.description && (
-					<p className="text-[10px] text-muted-foreground">{prop.description}</p>
+					<p className="text-[10px] text-muted-foreground">
+						{prop.description}
+					</p>
 				)}
 			</Field>
 		)
 	}
 
 	// x-field-type: "code" or multiline string
-	if (prop["x-field-type"] === "code" || isMultiline(fieldKey, prop.description)) {
+	if (
+		prop["x-field-type"] === "code" ||
+		isMultiline(fieldKey, prop.description)
+	) {
 		return (
 			<Field>
 				{label}
@@ -223,7 +238,9 @@ function SchemaField({
 					className={cn(inputRingCls)}
 				/>
 				{prop.description && (
-					<p className="text-[10px] text-muted-foreground">{prop.description}</p>
+					<p className="text-[10px] text-muted-foreground">
+						{prop.description}
+					</p>
 				)}
 			</Field>
 		)
@@ -321,7 +338,8 @@ export function TriggerConfig({
 					/>
 					<p className="text-[10px] text-muted-foreground">
 						Standard cron syntax, e.g.{" "}
-						<code className="font-mono">0 9 * * 1-5</code> for weekdays at 09:00.
+						<code className="font-mono">0 9 * * 1-5</code> for weekdays at
+						09:00.
 					</p>
 				</Field>
 			)}
@@ -364,7 +382,10 @@ export function AgentConfig({
 			<Field>
 				<FieldLabel>
 					Agent
-					<span className="ml-0.5 text-destructive font-bold" aria-label="required">
+					<span
+						className="ml-0.5 text-destructive font-bold"
+						aria-label="required"
+					>
 						*
 					</span>
 				</FieldLabel>
@@ -424,7 +445,10 @@ export function ConditionConfig({
 		<Field>
 			<FieldLabel>
 				Condition Expression
-				<span className="ml-0.5 text-destructive font-bold" aria-label="required">
+				<span
+					className="ml-0.5 text-destructive font-bold"
+					aria-label="required"
+				>
 					*
 				</span>
 			</FieldLabel>
@@ -469,10 +493,7 @@ export function OutputConfig({
 
 // ── Test result display ───────────────────────────────────────────────────────
 
-import {
-	CheckCircle2Icon,
-	XCircleIcon,
-} from "lucide-react"
+import { CheckCircle2Icon, XCircleIcon } from "lucide-react"
 
 export function TestResultPanel({
 	testResult,
@@ -576,9 +597,7 @@ export function NodeFormBody({
 			)}
 			{!isBuiltIn && (
 				<SchemaFormFields
-					schema={
-						manifest?.configSchema ?? { type: "object", properties: {} }
-					}
+					schema={manifest?.configSchema ?? { type: "object", properties: {} }}
 					data={node.data as Record<string, unknown>}
 					onUpdate={onUpdate}
 					upstreamNodes={upstreamNodes}

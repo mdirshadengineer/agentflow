@@ -69,7 +69,9 @@ describe("InMemoryRunLogger", () => {
 
 			await logger.completeStep("run-1", "step-a", "done");
 			const after = await logger.getLogsForRun("run-1");
-			expect(after.find((l) => l.stepName === "step-a")?.startedAt).toEqual(startedAt);
+			expect(after.find((l) => l.stepName === "step-a")?.startedAt).toEqual(
+				startedAt,
+			);
 		});
 	});
 

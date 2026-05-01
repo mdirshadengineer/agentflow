@@ -160,7 +160,9 @@ describe("SqliteRunLogger", () => {
 			const runId2 = makeRunId();
 			await logger.initStep(runId1, "step-only-in-run1");
 			const logsForRun2 = await logger.getLogsForRun(runId2);
-			expect(logsForRun2.find((l) => l.stepName === "step-only-in-run1")).toBeUndefined();
+			expect(
+				logsForRun2.find((l) => l.stepName === "step-only-in-run1"),
+			).toBeUndefined();
 		});
 	});
 

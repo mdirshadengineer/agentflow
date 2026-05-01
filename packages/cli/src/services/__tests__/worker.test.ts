@@ -69,7 +69,6 @@ describe("createWorker()", () => {
 	});
 });
 
-
 // These tests verify the public contract of createWorker() — a start/stop
 // service — without running the full DB integration (covered by api.test.ts).
 // The DB layer and WorkflowExecutor internals are exercised in their own test

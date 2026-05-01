@@ -41,7 +41,11 @@ export const filterExecutor: NodeExecutor = async (input, context) => {
 	let passed: boolean;
 	try {
 		// eslint-disable-next-line no-new-func
-		const fn = new Function("output", "previousOutputs", `return !!(${expression});`);
+		const fn = new Function(
+			"output",
+			"previousOutputs",
+			`return !!(${expression});`,
+		);
 		passed = Boolean(fn(output, previousOutputs));
 	} catch (err) {
 		const errMessage = err instanceof Error ? err.message : String(err);

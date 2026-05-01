@@ -39,14 +39,26 @@ function statusColor(status: string): string {
 function statusBadge(status: string) {
 	const base = "inline-block w-9 text-center font-bold uppercase text-[10px]"
 	if (status === "success")
-		return <span className={cn(base, "text-green-500 dark:text-green-400")}>DONE</span>
+		return (
+			<span className={cn(base, "text-green-500 dark:text-green-400")}>
+				DONE
+			</span>
+		)
 	if (status === "failed")
-		return <span className={cn(base, "text-red-500 dark:text-red-400")}>FAIL</span>
+		return (
+			<span className={cn(base, "text-red-500 dark:text-red-400")}>FAIL</span>
+		)
 	if (status === "skipped")
-		return <span className={cn(base, "text-yellow-600 dark:text-yellow-500")}>SKIP</span>
+		return (
+			<span className={cn(base, "text-yellow-600 dark:text-yellow-500")}>
+				SKIP
+			</span>
+		)
 	if (status === "running")
 		return (
-			<span className={cn(base, "text-blue-500 dark:text-blue-400 animate-pulse")}>
+			<span
+				className={cn(base, "text-blue-500 dark:text-blue-400 animate-pulse")}
+			>
 				RUN{" "}
 			</span>
 		)
