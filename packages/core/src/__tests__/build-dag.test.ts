@@ -43,7 +43,12 @@ describe("buildDag()", () => {
 			const def = {
 				steps: [
 					{ name: "a", type: "noop" },
-					{ name: "b", type: "log", dependsOn: ["a"], config: { message: "hi" } },
+					{
+						name: "b",
+						type: "log",
+						dependsOn: ["a"],
+						config: { message: "hi" },
+					},
 				],
 				triggers: [{ type: "cron" as const, cron: "* * * * *" }],
 			};
@@ -115,7 +120,13 @@ describe("buildDag()", () => {
 
 		it("uses node.data as the step config", () => {
 			const result = buildDag({
-				nodes: [{ id: "n1", type: "http-request", data: { url: "https://example.com" } }],
+				nodes: [
+					{
+						id: "n1",
+						type: "http-request",
+						data: { url: "https://example.com" },
+					},
+				],
 				edges: [],
 			});
 			expect(result.steps?.[0]?.config).toEqual({ url: "https://example.com" });
@@ -155,7 +166,11 @@ describe("buildDag()", () => {
 					{
 						id: "n1",
 						type: "generic",
-						data: { nodeType: "http-request", label: "HTTP Request", url: "https://example.com" },
+						data: {
+							nodeType: "http-request",
+							label: "HTTP Request",
+							url: "https://example.com",
+						},
 					},
 				],
 				edges: [],
@@ -169,7 +184,11 @@ describe("buildDag()", () => {
 					{
 						id: "n1",
 						type: "generic",
-						data: { nodeType: "http-request", label: "My HTTP", url: "https://example.com" },
+						data: {
+							nodeType: "http-request",
+							label: "My HTTP",
+							url: "https://example.com",
+						},
 					},
 				],
 				edges: [],

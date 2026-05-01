@@ -42,7 +42,11 @@ export const transformExecutor: NodeExecutor = async (input, context) => {
 	let result: unknown;
 	try {
 		// eslint-disable-next-line no-new-func
-		const fn = new Function("output", "previousOutputs", `return (${expression});`);
+		const fn = new Function(
+			"output",
+			"previousOutputs",
+			`return (${expression});`,
+		);
 		result = fn(output, previousOutputs) as unknown;
 	} catch (err) {
 		const message = err instanceof Error ? err.message : String(err);

@@ -129,14 +129,14 @@ export function runMigrations() {
 				["llm_model", "TEXT"],
 				["system_prompt", "TEXT"],
 				["tools", "TEXT"],
-			]
+			];
 			for (const [col, colType] of agentCols) {
 				if (!columnExists(raw, "agents", col)) {
-					raw.exec(`ALTER TABLE agents ADD COLUMN ${col} ${colType}`)
+					raw.exec(`ALTER TABLE agents ADD COLUMN ${col} ${colType}`);
 				}
 			}
-			markApplied(raw, 2)
-		})()
+			markApplied(raw, 2);
+		})();
 	}
 
 	// ── Version 3: node_executions + agent_sessions tables ───────────────────
@@ -178,9 +178,7 @@ export function runMigrations() {
 				// SQLite forbids non-constant expressions (e.g. function calls) as
 				// DEFAULT values in ALTER TABLE ADD COLUMN.  Add the column without a
 				// default and then back-fill any existing rows with the current time.
-				raw.exec(
-					"ALTER TABLE workflow_runs ADD COLUMN created_at INTEGER",
-				);
+				raw.exec("ALTER TABLE workflow_runs ADD COLUMN created_at INTEGER");
 				raw
 					.prepare(
 						"UPDATE workflow_runs SET created_at = ? WHERE created_at IS NULL",

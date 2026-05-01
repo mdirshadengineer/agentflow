@@ -98,7 +98,10 @@ describe("GET /api/v1/runs", () => {
 
 describe("GET /api/v1/runs/:id", () => {
 	it("returns 401 when not authenticated", async () => {
-		const res = await app.inject({ method: "GET", url: "/api/v1/runs/some-id" });
+		const res = await app.inject({
+			method: "GET",
+			url: "/api/v1/runs/some-id",
+		});
 		expect(res.statusCode).toBe(401);
 	});
 

@@ -3,7 +3,7 @@
  * whenever the user types `{{`. Suggested variables are derived from upstream
  * workflow nodes and follow the pattern `{{ steps.<label>.output }}`.
  */
-import {  useRef, useState } from "react"
+import { useRef, useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"

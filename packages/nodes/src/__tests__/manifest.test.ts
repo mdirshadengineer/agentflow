@@ -3,7 +3,16 @@ import { describe, expect, it } from "vitest";
 import { allManifests, getManifest } from "../manifest.js";
 import { registerAll } from "../register.js";
 
-const EXPECTED_TYPES = ["noop", "http-request", "delay", "log", "transform", "json-extract", "filter", "subworkflow"];
+const EXPECTED_TYPES = [
+	"noop",
+	"http-request",
+	"delay",
+	"log",
+	"transform",
+	"json-extract",
+	"filter",
+	"subworkflow",
+];
 
 // ── allManifests ──────────────────────────────────────────────────────────────
 

@@ -4,7 +4,10 @@ import {
 	InMemoryRunLogger,
 	WorkflowExecutor,
 } from "@mdirshadengineer/agentflow-core";
-import type { NodeExecutor, NodeOutput } from "@mdirshadengineer/agentflow-core";
+import type {
+	NodeExecutor,
+	NodeOutput,
+} from "@mdirshadengineer/agentflow-core";
 import { randomUUID } from "node:crypto";
 
 /**

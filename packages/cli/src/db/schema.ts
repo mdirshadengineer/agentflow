@@ -97,10 +97,9 @@ export const agentSessions = sqliteTable("agent_sessions", {
 	agentId: text("agent_id")
 		.notNull()
 		.references(() => agents.id, { onDelete: "cascade" }),
-	workflowRunId: text("workflow_run_id").references(
-		() => workflowRuns.id,
-		{ onDelete: "set null" },
-	),
+	workflowRunId: text("workflow_run_id").references(() => workflowRuns.id, {
+		onDelete: "set null",
+	}),
 	messages: text("messages").notNull().default("[]"),
 	status: text("status").notNull(),
 	createdAt: integer("created_at", { mode: "timestamp_ms" })

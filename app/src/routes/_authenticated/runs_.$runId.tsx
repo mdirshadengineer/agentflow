@@ -28,10 +28,14 @@ function statusColor(status: string): string {
 
 function statusBadge(status: string) {
 	const base = "inline-block w-9 text-center font-bold uppercase text-[10px]"
-	if (status === "success") return <span className={cn(base, "text-green-400")}>DONE</span>
-	if (status === "failed") return <span className={cn(base, "text-red-400")}>FAIL</span>
-	if (status === "skipped") return <span className={cn(base, "text-yellow-500")}>SKIP</span>
-	if (status === "running") return <span className={cn(base, "text-blue-400 animate-pulse")}>RUN </span>
+	if (status === "success")
+		return <span className={cn(base, "text-green-400")}>DONE</span>
+	if (status === "failed")
+		return <span className={cn(base, "text-red-400")}>FAIL</span>
+	if (status === "skipped")
+		return <span className={cn(base, "text-yellow-500")}>SKIP</span>
+	if (status === "running")
+		return <span className={cn(base, "text-blue-400 animate-pulse")}>RUN </span>
 	return <span className={cn(base, "text-zinc-500")}>WAIT</span>
 }
 
@@ -96,7 +100,7 @@ function RunSummaryBar({
 		<div
 			className={cn(
 				"flex items-center gap-3 px-4 py-2 rounded-t-lg border-b font-mono text-xs",
-				"bg-zinc-900 border-zinc-700",
+				"bg-zinc-900 border-zinc-700"
 			)}
 		>
 			{isOk && <CheckCircleIcon className="size-3.5 text-green-400 shrink-0" />}
@@ -109,7 +113,7 @@ function RunSummaryBar({
 					"font-semibold",
 					isOk && "text-green-400",
 					isFail && "text-red-400",
-					!isOk && !isFail && "text-zinc-400",
+					!isOk && !isFail && "text-zinc-400"
 				)}
 			>
 				{status.toUpperCase()}
@@ -218,13 +222,15 @@ function RunDetailPage() {
 					</div>
 
 					{/* Status footer */}
-					{(streamStatus === "done" || run.status === "success" || run.status === "failed") && (
+					{(streamStatus === "done" ||
+						run.status === "success" ||
+						run.status === "failed") && (
 						<div
 							className={cn(
 								"px-4 py-1.5 font-mono text-[10px] border-t",
 								run.status === "success"
 									? "bg-green-950/40 border-green-900/40 text-green-500"
-									: "bg-red-950/40 border-red-900/40 text-red-500",
+									: "bg-red-950/40 border-red-900/40 text-red-500"
 							)}
 						>
 							▶ Run {runId.slice(0, 8)} exited with status{" "}

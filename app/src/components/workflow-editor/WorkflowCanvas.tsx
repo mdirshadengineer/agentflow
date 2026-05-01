@@ -11,7 +11,12 @@ import {
 } from "@xyflow/react"
 import { useCallback, useState } from "react"
 import "@xyflow/react/dist/style.css"
-import type { Connection, EdgeChange, EdgeProps, NodeChange } from "@xyflow/react"
+import type {
+	Connection,
+	EdgeChange,
+	EdgeProps,
+	NodeChange,
+} from "@xyflow/react"
 import { AlertTriangleIcon, LayoutTemplateIcon, ZapIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { WorkflowEdge, WorkflowNode } from "@/types/workflow"
@@ -123,7 +128,7 @@ export function WorkflowCanvas({
 		(_event, node) => {
 			onNodeClick(node.id)
 		},
-		[onNodeClick],
+		[onNodeClick]
 	)
 
 	const onDragOver = useCallback((event: React.DragEvent) => {
@@ -135,7 +140,7 @@ export function WorkflowCanvas({
 		(event: React.DragEvent) => {
 			event.preventDefault()
 			const nodeType = event.dataTransfer.getData(
-				"application/agentflow-node-type",
+				"application/agentflow-node-type"
 			)
 			if (!nodeType || !rfInstance) return
 			const position = rfInstance.screenToFlowPosition({
@@ -144,7 +149,7 @@ export function WorkflowCanvas({
 			})
 			onAddNode(nodeType, position)
 		},
-		[rfInstance, onAddNode],
+		[rfInstance, onAddNode]
 	)
 
 	const handleInit = useCallback(
@@ -152,7 +157,7 @@ export function WorkflowCanvas({
 			setRfInstance(instance)
 			onRfInit?.(instance)
 		},
-		[onRfInit],
+		[onRfInit]
 	)
 
 	const isEmpty = nodes.length === 0
@@ -188,7 +193,10 @@ export function WorkflowCanvas({
 					className="absolute inset-0 flex flex-col items-center justify-center gap-3 pointer-events-none"
 					aria-label="Empty canvas"
 				>
-					<ZapIcon className="size-8 text-muted-foreground/40" aria-hidden="true" />
+					<ZapIcon
+						className="size-8 text-muted-foreground/40"
+						aria-hidden="true"
+					/>
 					<div className="text-center">
 						<p className="text-sm font-medium text-muted-foreground">
 							Start by dragging a Trigger node

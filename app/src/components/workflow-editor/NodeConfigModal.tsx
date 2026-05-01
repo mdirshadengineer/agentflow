@@ -453,7 +453,7 @@ export function NodeConfigModal({
 				</DialogHeader>
 
 				{/* Three-column body */}
-				<div className="grid grid-cols-[1fr_1.6fr_1fr] divide-x overflow-hidden max-h-[85vh]">
+				<div className="grid grid-cols-[1fr_1.6fr_1fr] divide-x overflow-hidden h-[80vh]">
 					{/* ── Column 1: Input ── */}
 					<div className="flex flex-col overflow-hidden">
 						<div className="px-4 py-2.5 border-b bg-muted/20 shrink-0 flex items-center gap-2">
@@ -528,35 +528,35 @@ export function NodeConfigModal({
 												<p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
 													Configuration fields
 												</p>
-												{Object.entries(
-													manifest.configSchema.properties
-												).map(([key, prop]) => (
-													<div
-														key={key}
-														className="rounded-md border bg-muted/30 px-3 py-2"
-													>
-														<div className="flex items-center gap-1.5">
-															<code className="text-[10px] font-mono text-primary">
-																{key}
-															</code>
-															<span className="text-[9px] text-muted-foreground/60 bg-muted rounded px-1">
-																{prop.type ?? "string"}
-															</span>
-															{manifest.configSchema.required?.includes(
-																key
-															) && (
-																<span className="text-[9px] text-destructive font-medium">
-																	required
+												{Object.entries(manifest.configSchema.properties).map(
+													([key, prop]) => (
+														<div
+															key={key}
+															className="rounded-md border bg-muted/30 px-3 py-2"
+														>
+															<div className="flex items-center gap-1.5">
+																<code className="text-[10px] font-mono text-primary">
+																	{key}
+																</code>
+																<span className="text-[9px] text-muted-foreground/60 bg-muted rounded px-1">
+																	{prop.type ?? "string"}
 																</span>
+																{manifest.configSchema.required?.includes(
+																	key
+																) && (
+																	<span className="text-[9px] text-destructive font-medium">
+																		required
+																	</span>
+																)}
+															</div>
+															{prop.description && (
+																<p className="text-[10px] text-muted-foreground mt-1">
+																	{prop.description}
+																</p>
 															)}
 														</div>
-														{prop.description && (
-															<p className="text-[10px] text-muted-foreground mt-1">
-																{prop.description}
-															</p>
-														)}
-													</div>
-												))}
+													)
+												)}
 											</div>
 										)}
 								</div>

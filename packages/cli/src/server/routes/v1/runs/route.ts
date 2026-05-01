@@ -105,7 +105,10 @@ export default async function runsRoutes(fastify: FastifyInstance) {
 				.where(eq(workflowRunSteps.runId, id))
 				.all();
 
-			return reply.send({ ...serializeRun(run), steps: steps.map(serializeStep) });
+			return reply.send({
+				...serializeRun(run),
+				steps: steps.map(serializeStep),
+			});
 		},
 	);
 
@@ -157,7 +160,10 @@ export default async function runsRoutes(fastify: FastifyInstance) {
 				.from(workflowRunSteps)
 				.where(eq(workflowRunSteps.runId, id))
 				.all();
-			send("snapshot", { run: serializeRun(run), steps: initialSteps.map(serializeStep) });
+			send("snapshot", {
+				run: serializeRun(run),
+				steps: initialSteps.map(serializeStep),
+			});
 
 			// If already in a terminal state, close immediately
 			if (run.status === "success" || run.status === "failed") {
@@ -207,7 +213,10 @@ export default async function runsRoutes(fastify: FastifyInstance) {
 						.where(eq(workflowRunSteps.runId, id))
 						.all();
 
-					send("update", { run: serializeRun(currentRun), steps: steps.map(serializeStep) });
+					send("update", {
+						run: serializeRun(currentRun),
+						steps: steps.map(serializeStep),
+					});
 
 					if (
 						currentRun.status === "success" ||

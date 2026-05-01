@@ -13,13 +13,7 @@
 				"type": "string",
 				"description": "HTTP method.",
 				"default": "GET",
-				"enum": [
-					"GET",
-					"POST",
-					"PUT",
-					"PATCH",
-					"DELETE"
-				]
+				"enum": ["GET", "POST", "PUT", "PATCH", "DELETE"]
 			},
 			"headers": {
 				"type": "object",
@@ -33,9 +27,7 @@
 				"description": "Raw request body (for POST / PUT / PATCH requests)."
 			}
 		},
-		"required": [
-			"url"
-		]
+		"required": ["url"]
 	},
 	"outputSchema": {
 		"type": "object",

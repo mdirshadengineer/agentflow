@@ -11,7 +11,7 @@ export function ConditionNode({
 		<div
 			className={cn(
 				"min-w-40 rounded-lg border bg-card shadow-sm overflow-visible",
-				selected && "ring-2 ring-primary animate-node-select",
+				selected && "ring-2 ring-primary animate-node-select"
 			)}
 		>
 			<div className="flex items-center gap-1.5 bg-amber-500/10 border-b px-3 py-1.5 rounded-t-lg">

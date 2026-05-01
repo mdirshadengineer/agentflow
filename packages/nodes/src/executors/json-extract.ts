@@ -54,7 +54,9 @@ export const jsonExtractExecutor: NodeExecutor = async (input, context) => {
 	const found = current !== undefined;
 	const value = found
 		? current
-		: (defaultValue !== undefined ? defaultValue : null);
+		: defaultValue !== undefined
+			? defaultValue
+			: null;
 
 	return {
 		data: { value },
