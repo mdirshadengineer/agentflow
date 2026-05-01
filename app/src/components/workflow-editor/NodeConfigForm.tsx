@@ -65,6 +65,7 @@ interface FieldProps {
 	value: unknown
 	required: boolean
 	upstreamNodes: WorkflowNode[]
+	upstreamOutputs?: Map<string, Record<string, unknown>>
 	onUpdate: (patch: Record<string, unknown>) => void
 }
 
@@ -74,6 +75,7 @@ function SchemaField({
 	value,
 	required,
 	upstreamNodes,
+	upstreamOutputs,
 	onUpdate,
 }: FieldProps) {
 	const isEmpty = value === undefined || value === null || value === ""
@@ -232,6 +234,7 @@ function SchemaField({
 					value={String(value ?? prop.default ?? "")}
 					onChange={(v) => onUpdate({ [fieldKey]: v })}
 					upstreamNodes={upstreamNodes}
+					upstreamOutputs={upstreamOutputs}
 					multiline
 					rows={4}
 					className={cn(inputRingCls)}
@@ -253,6 +256,7 @@ function SchemaField({
 				value={String(value ?? prop.default ?? "")}
 				onChange={(v) => onUpdate({ [fieldKey]: v })}
 				upstreamNodes={upstreamNodes}
+				upstreamOutputs={upstreamOutputs}
 				className={inputRingCls}
 			/>
 			{prop.description && (
@@ -267,11 +271,13 @@ export function SchemaFormFields({
 	data,
 	onUpdate,
 	upstreamNodes = [],
+	upstreamOutputs,
 }: {
 	schema: NodeManifest["configSchema"]
 	data: Record<string, unknown>
 	onUpdate: (d: Record<string, unknown>) => void
 	upstreamNodes?: WorkflowNode[]
+	upstreamOutputs?: Map<string, Record<string, unknown>>
 }) {
 	const entries = Object.entries(schema.properties ?? {})
 	if (entries.length === 0) return null
@@ -287,6 +293,7 @@ export function SchemaFormFields({
 					value={data[key]}
 					required={requiredSet.has(key)}
 					upstreamNodes={upstreamNodes}
+					upstreamOutputs={upstreamOutputs}
 					onUpdate={onUpdate}
 				/>
 			))}
@@ -368,11 +375,13 @@ export function AgentConfig({
 	agents,
 	onUpdate,
 	upstreamNodes = [],
+	upstreamOutputs,
 }: {
 	node: WorkflowNode
 	agents: Agent[]
 	onUpdate: (d: Record<string, unknown>) => void
 	upstreamNodes?: WorkflowNode[]
+	upstreamOutputs?: Map<string, Record<string, unknown>>
 }) {
 	const d = node.data as { agentId?: string; prompt?: string }
 	const isEmpty = !d.agentId
@@ -419,6 +428,7 @@ export function AgentConfig({
 					value={d.prompt ?? ""}
 					onChange={(v) => onUpdate({ prompt: v })}
 					upstreamNodes={upstreamNodes}
+					upstreamOutputs={upstreamOutputs}
 					multiline
 					rows={4}
 					placeholder="Optional prompt… Type {{ to reference previous outputs"
@@ -432,10 +442,12 @@ export function ConditionConfig({
 	node,
 	onUpdate,
 	allNodes,
+	upstreamOutputs,
 }: {
 	node: WorkflowNode
 	onUpdate: (d: Record<string, unknown>) => void
 	allNodes?: WorkflowNode[]
+	upstreamOutputs?: Map<string, Record<string, unknown>>
 }) {
 	const d = node.data as { condition?: string }
 	const upstreamNodes = (allNodes ?? []).filter((n) => n.id !== node.id)
@@ -455,6 +467,7 @@ export function ConditionConfig({
 				value={d.condition ?? ""}
 				onChange={(v) => onUpdate({ condition: v })}
 				upstreamNodes={upstreamNodes}
+				upstreamOutputs={upstreamOutputs}
 				multiline
 				rows={3}
 				placeholder="output.status === 'approved'"
@@ -551,12 +564,14 @@ export function NodeFormBody({
 	agents,
 	allNodes,
 	onUpdate,
+	upstreamOutputs,
 }: {
 	node: WorkflowNode
 	manifest?: NodeManifest
 	agents: Agent[]
 	allNodes?: WorkflowNode[]
 	onUpdate: (patch: Record<string, unknown>) => void
+	upstreamOutputs?: Map<string, Record<string, unknown>>
 }) {
 	const isBuiltIn =
 		node.type === "trigger" ||
@@ -586,10 +601,16 @@ export function NodeFormBody({
 					agents={agents}
 					onUpdate={onUpdate}
 					upstreamNodes={upstreamNodes}
+					upstreamOutputs={upstreamOutputs}
 				/>
 			)}
 			{node.type === "condition" && (
-				<ConditionConfig node={node} onUpdate={onUpdate} allNodes={allNodes} />
+				<ConditionConfig
+					node={node}
+					onUpdate={onUpdate}
+					allNodes={allNodes}
+					upstreamOutputs={upstreamOutputs}
+				/>
 			)}
 			{node.type === "output" && (
 				<OutputConfig node={node} onUpdate={onUpdate} />
@@ -600,6 +621,7 @@ export function NodeFormBody({
 					data={node.data as Record<string, unknown>}
 					onUpdate={onUpdate}
 					upstreamNodes={upstreamNodes}
+					upstreamOutputs={upstreamOutputs}
 				/>
 			)}
 		</FieldGroup>
