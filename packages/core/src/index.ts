@@ -5,9 +5,14 @@ export type {
 	CanvasWorkflowDefinition,
 } from "./build-dag.js";
 export { buildDag } from "./build-dag.js";
+// ── Workflow compiler ─────────────────────────────────────────────────────────
+export { compileWorkflow } from "./compile-workflow.js";
 // ── Expression resolver ───────────────────────────────────────────────────────
 export {
+	collectStepReferences,
 	findUnresolvedRefs,
+	parseExpression,
+	parseTemplate,
 	resolveExpressions,
 } from "./expression-resolver.js";
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -38,24 +43,49 @@ export type { ToolDefinition } from "./tool-registry.js";
 export { defaultToolRegistry, ToolRegistry } from "./tool-registry.js";
 export type {
 	ChatMessage,
+	ConfigFieldSchema,
+	ConfigValue,
+	CredentialRef,
 	ExecutionContext,
+	ExecutionPlan,
+	ExprAst,
+	FieldVisibilityRule,
+	InputBinding,
 	JsonSchema,
 	LLMOptions,
 	LLMResponse,
 	LLMToolResponse,
 	LogEvent,
+	NodeCatalogEntry,
+	NodeConfigSchema,
+	NodeCredentialRequirement,
+	NodeDefinition,
+	NodeExecutionArgs,
+	NodeExecutionHandler,
+	NodeExecutionResult,
 	NodeInput,
+	NodeInputPort,
 	NodeManifestLike,
+	NodeMigration,
 	NodeOutput,
+	NodeOutputPort,
 	NodePlugin,
+	PathSegment,
 	QueuedRun,
 	RunStatus,
 	StepLog,
 	StepRetryPolicy,
 	StepStatus,
+	SymbolTable,
+	SymbolTableStep,
+	TemplateAst,
 	ToolCall,
+	TypeRef,
+	WorkflowCompileError,
+	WorkflowCompileResult,
 	WorkflowDefinition,
 	WorkflowStep,
+	WorkflowStepDefinition,
 } from "./types.js";
 // ── Workflow executor ─────────────────────────────────────────────────────────
 export { WorkflowExecutor } from "./workflow-executor.js";

@@ -1,6 +1,10 @@
 import { NodeRegistry } from "@mdirshadengineer/agentflow-core";
 import { describe, expect, it } from "vitest";
 import { allManifests, getManifest } from "../manifest.js";
+import {
+	allNodeCatalogEntries,
+	allNodeDefinitions,
+} from "../node-definitions.js";
 import { registerAll } from "../register.js";
 
 const EXPECTED_TYPES = [
@@ -36,6 +40,22 @@ describe("allManifests", () => {
 	it("every configSchema has type 'object'", () => {
 		for (const m of allManifests) {
 			expect(m.configSchema.type).toBe("object");
+		}
+	});
+});
+
+describe("allNodeDefinitions", () => {
+	it("contains a definition for each built-in manifest", () => {
+		expect(
+			allNodeDefinitions.map((definition) => definition.type).sort(),
+		).toEqual([...EXPECTED_TYPES].sort());
+	});
+
+	it("exposes serializable catalog entries without handlers", () => {
+		for (const entry of allNodeCatalogEntries) {
+			expect(entry).not.toHaveProperty("handler");
+			expect(entry.configSchema.fields.length).toBeGreaterThanOrEqual(0);
+			expect(entry.outputJsonSchema).toBeDefined();
 		}
 	});
 });

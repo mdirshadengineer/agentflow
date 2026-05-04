@@ -75,6 +75,228 @@ export interface WorkflowDefinition {
 	triggers?: Array<{ type: "cron"; cron: string }>;
 }
 
+// ── Expression / compilation types ─────────────────────────────────────────────
+
+export type PathSegment = string | number;
+
+export type ExprAst =
+	| {
+			kind: "StepRef";
+			stepId: string;
+			port: string;
+			path: PathSegment[];
+	  }
+	| { kind: "Literal"; value: unknown }
+	| { kind: "Call"; fn: string; args: ExprAst[] };
+
+export type TemplateAst = Array<
+	{ kind: "Text"; value: string } | { kind: "Expr"; expr: ExprAst }
+>;
+
+export type ConfigValue =
+	| { kind: "literal"; value: unknown }
+	| { kind: "expression"; source: string; ast: ExprAst }
+	| { kind: "template"; source: string; ast: TemplateAst };
+
+export interface CredentialRef {
+	credentialId: string;
+	expectedType: string;
+}
+
+export interface InputBinding {
+	type: "edge" | "expression" | "literal";
+	port?: string;
+	value?: ConfigValue;
+}
+
+export interface WorkflowStepDefinition {
+	id: string;
+	type: string;
+	version: number;
+	name: string;
+	config: Record<string, ConfigValue>;
+	inputBindings?: Record<string, InputBinding>;
+	credentialBindings?: Record<string, CredentialRef>;
+	retry?: StepRetryPolicy;
+	continueOnFail?: boolean;
+	timeoutMs?: number;
+}
+
+export interface WorkflowCompileError {
+	code:
+		| "cycle"
+		| "invalid_expression"
+		| "unknown_step_reference"
+		| "non_upstream_reference"
+		| "missing_required_field";
+	message: string;
+	stepName?: string;
+	field?: string;
+	reference?: string;
+}
+
+export interface SymbolTableStep {
+	stepId: string;
+	label: string;
+	outputs: Record<string, JsonSchema>;
+}
+
+export interface SymbolTable {
+	steps: Record<string, SymbolTableStep>;
+}
+
+export interface ExecutionPlan {
+	steps: WorkflowStep[];
+	dependencies: Record<string, string[]>;
+	topologicalLevels: string[][];
+	schemas: Record<string, { output?: JsonSchema }>;
+	credentialRefs: Record<string, Record<string, CredentialRef>>;
+	symbolTable: SymbolTable;
+	compiledConfig: Record<string, Record<string, ConfigValue>>;
+}
+
+export interface WorkflowCompileResult {
+	definition: WorkflowDefinition;
+	plan: ExecutionPlan;
+	errors: WorkflowCompileError[];
+}
+
+// ── Node definition types ──────────────────────────────────────────────────────
+
+export type PrimitiveType =
+	| "string"
+	| "number"
+	| "boolean"
+	| "object"
+	| "array"
+	| "json"
+	| "any";
+
+export interface TypeRef {
+	kind: PrimitiveType | "ref";
+	ref?: string;
+	schema?: JsonSchema;
+}
+
+export interface NodeInputPort {
+	name: string;
+	title: string;
+	required: boolean;
+	multiple?: boolean;
+	type: TypeRef;
+	description?: string;
+}
+
+export interface NodeOutputPort {
+	name: string;
+	title: string;
+	type: TypeRef;
+	description?: string;
+}
+
+export interface NodeCredentialRequirement {
+	name: string;
+	credentialType: string;
+	required: boolean;
+	scopes?: string[];
+}
+
+export interface FieldVisibilityRule {
+	when: string;
+}
+
+export interface ConfigFieldSchema {
+	key: string;
+	label: string;
+	type:
+		| "text"
+		| "textarea"
+		| "number"
+		| "select"
+		| "toggle"
+		| "json"
+		| "code"
+		| "keyValue"
+		| "expression"
+		| "credential";
+	required?: boolean;
+	allowExpressions?: boolean;
+	defaultValue?: unknown;
+	placeholder?: string;
+	description?: string;
+	enum?: Array<{ label: string; value: string }>;
+	validation?: {
+		regex?: string;
+		min?: number;
+		max?: number;
+		customRuleIds?: string[];
+	};
+	visibleWhen?: FieldVisibilityRule;
+	dependsOn?: string[];
+	credentialType?: string;
+}
+
+export interface NodeConfigSchema {
+	fields: ConfigFieldSchema[];
+	layout?: Array<{ section: string; fields: string[] }>;
+}
+
+export interface NodeExecutionArgs<TConfig = unknown> {
+	step: WorkflowStep;
+	config: TConfig;
+	inputs: Record<string, unknown>;
+	context: ExecutionContext;
+	credentials: Record<string, unknown>;
+	logger?: {
+		log(message: string): void;
+	};
+	abortSignal?: AbortSignal;
+}
+
+export interface NodeExecutionResult<TOutput = unknown> {
+	status: "success" | "failed";
+	output: TOutput;
+	error?: {
+		code: string;
+		message: string;
+		retryable?: boolean;
+	};
+	logs?: string[];
+}
+
+export interface NodeExecutionHandler<TConfig = unknown, TOutput = unknown> {
+	execute(
+		args: NodeExecutionArgs<TConfig>,
+	): Promise<NodeExecutionResult<TOutput>>;
+}
+
+export interface NodeMigration {
+	fromVersion: number;
+	toVersion: number;
+	migrate(config: Record<string, unknown>): Record<string, unknown>;
+}
+
+export interface NodeDefinition<TConfig = unknown, TOutput = unknown> {
+	type: string;
+	version: number;
+	label: string;
+	description: string;
+	category: string;
+	icon?: string;
+	inputs: NodeInputPort[];
+	outputs: NodeOutputPort[];
+	configSchema: NodeConfigSchema;
+	configJsonSchema: JsonSchema;
+	outputJsonSchema: JsonSchema;
+	credentials?: NodeCredentialRequirement[];
+	retryable?: boolean;
+	idempotent?: boolean;
+	handler: NodeExecutionHandler<TConfig, TOutput>;
+	migrations?: NodeMigration[];
+}
+
+export type NodeCatalogEntry = Omit<NodeDefinition, "handler" | "migrations">;
+
 // ── LLM types ─────────────────────────────────────────────────────────────────
 
 export interface ChatMessage {

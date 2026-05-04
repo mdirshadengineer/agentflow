@@ -209,13 +209,13 @@ describe("buildDag()", () => {
 	});
 
 	describe("cron trigger extraction", () => {
-		it("extracts a cron trigger from a trigger node with triggerType 'cron'", () => {
+		it("extracts a cron trigger from a trigger node with triggerType 'scheduled'", () => {
 			const result = buildDag({
 				nodes: [
 					{
 						id: "trigger-1",
 						type: "trigger",
-						data: { triggerType: "cron", cron: "0 * * * *" },
+						data: { triggerType: "scheduled", cron: "0 * * * *" },
 					},
 					{ id: "step-1", type: "noop", data: {} },
 				],

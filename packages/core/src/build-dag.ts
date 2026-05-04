@@ -95,9 +95,9 @@ export function buildDag(raw: unknown): WorkflowDefinition {
 			};
 		});
 
-		// Extract cron triggers from trigger-type canvas nodes
+		// Extract scheduled triggers from trigger-type canvas nodes
 		const triggers: WorkflowDefinition["triggers"] = nodes
-			.filter((n) => n.type === "trigger" && n.data.triggerType === "cron")
+			.filter((n) => n.type === "trigger" && n.data.triggerType === "scheduled")
 			.map((n) => ({
 				type: "cron" as const,
 				cron: n.data.cron as string,

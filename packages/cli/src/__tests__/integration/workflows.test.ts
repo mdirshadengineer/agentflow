@@ -182,6 +182,56 @@ describe("Workflows CRUD", () => {
 		expect(res.statusCode).toBe(404);
 	});
 
+	it("POST /api/v1/workflows/:id/compile — returns execution metadata", async () => {
+		const create = await app.inject({
+			method: "POST",
+			url: "/api/v1/workflows",
+			payload: {
+				name: "Compile Me",
+				definition: {
+					nodes: [
+						{
+							id: "fetch",
+							type: "generic",
+							position: { x: 0, y: 0 },
+							data: {
+								label: "Fetch",
+								nodeType: "http-request",
+								url: "https://example.com",
+							},
+						},
+						{
+							id: "log",
+							type: "generic",
+							position: { x: 200, y: 0 },
+							data: {
+								label: "Log",
+								nodeType: "log",
+								message: "{{ steps.fetch.output.body }}",
+							},
+						},
+					],
+					edges: [{ id: "e1", source: "fetch", target: "log" }],
+				},
+			},
+			cookies: { token: cookie },
+		});
+		const { id } = create.json() as { id: string };
+
+		const res = await app.inject({
+			method: "POST",
+			url: `/api/v1/workflows/${id}/compile`,
+			cookies: { token: cookie },
+		});
+		expect(res.statusCode).toBe(200);
+		const body = res.json() as {
+			errors: unknown[];
+			plan: { topologicalLevels: string[][] };
+		};
+		expect(body.errors).toEqual([]);
+		expect(body.plan.topologicalLevels).toEqual([["fetch"], ["log"]]);
+	});
+
 	it("DELETE /api/v1/workflows/:id — deletes the workflow", async () => {
 		const create = await app.inject({
 			method: "POST",

@@ -74,7 +74,7 @@ describe("GET /api/v1/nodes", () => {
 		expect(types).toContain("log");
 	});
 
-	it("every manifest entry has type, label, and description fields", async () => {
+	it("every manifest entry has type, label, description, and schema fields", async () => {
 		const res = await app.inject({
 			method: "GET",
 			url: "/api/v1/nodes",
@@ -84,6 +84,8 @@ describe("GET /api/v1/nodes", () => {
 			expect(typeof manifest.type).toBe("string");
 			expect(typeof manifest.label).toBe("string");
 			expect(typeof manifest.description).toBe("string");
+			expect(manifest.configSchema).toBeDefined();
+			expect(manifest.outputJsonSchema).toBeDefined();
 		}
 	});
 

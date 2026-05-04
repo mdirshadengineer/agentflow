@@ -1,6 +1,12 @@
 import { randomUUID } from "node:crypto";
-import { defaultNodeRegistry } from "@mdirshadengineer/agentflow-core";
-import { registerAll } from "@mdirshadengineer/agentflow-nodes";
+import {
+	compileWorkflow,
+	defaultNodeRegistry,
+} from "@mdirshadengineer/agentflow-core";
+import {
+	allNodeCatalogEntries,
+	registerAll,
+} from "@mdirshadengineer/agentflow-nodes";
 import { and, eq } from "drizzle-orm";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import {
@@ -163,6 +169,33 @@ export default async function workflowsRoutes(fastify: FastifyInstance) {
 			return reply.code(500).send({ error: "Failed to update workflow" });
 		}
 		return reply.send(serializeWorkflow(updated));
+	});
+
+	// POST /api/v1/workflows/:id/compile — compile and validate a workflow definition
+	fastify.post<{
+		Params: { id: string };
+		Body: { definition?: unknown };
+	}>("/:id/compile", { preHandler: requireAuth }, async (request, reply) => {
+		const { userId } = request.user as JWTPayload;
+		const { id } = request.params;
+		const db = getDb();
+		const workflow = db
+			.select()
+			.from(workflows)
+			.where(and(eq(workflows.id, id), eq(workflows.ownerId, userId)))
+			.get();
+
+		if (!workflow) {
+			return reply.code(404).send({ error: "Workflow not found" });
+		}
+
+		const sourceDefinition =
+			request.body?.definition ?? parseJson(workflow.definition) ?? {};
+		const result = compileWorkflow(sourceDefinition, {
+			nodeCatalog: allNodeCatalogEntries,
+		});
+
+		return reply.send(result);
 	});
 
 	// DELETE /api/v1/workflows/:id

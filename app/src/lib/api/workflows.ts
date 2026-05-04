@@ -112,6 +112,41 @@ export interface NodeTestOutput {
 	logs: string
 }
 
+export interface WorkflowCompileResult {
+	definition: {
+		steps?: Array<{
+			name: string
+			type: string
+			config?: Record<string, unknown>
+			dependsOn?: string[]
+		}>
+		triggers?: Array<{ type: "cron"; cron: string }>
+	}
+	plan: {
+		dependencies: Record<string, string[]>
+		topologicalLevels: string[][]
+		schemas: Record<string, { output?: unknown }>
+		credentialRefs: Record<
+			string,
+			Record<string, { credentialId: string; expectedType: string }>
+		>
+		symbolTable: {
+			steps: Record<
+				string,
+				{ stepId: string; label: string; outputs: Record<string, unknown> }
+			>
+		}
+		compiledConfig: Record<string, Record<string, unknown>>
+	}
+	errors: Array<{
+		code: string
+		message: string
+		stepName?: string
+		field?: string
+		reference?: string
+	}>
+}
+
 /**
  * Execute a single node synchronously for rapid "test step" feedback.
  */
@@ -128,4 +163,17 @@ export async function testNode(
 	if (!r.ok) await throwOnError(r)
 	const body = (await r.json()) as { output: NodeTestOutput }
 	return body.output
+}
+
+export async function compileWorkflowDefinition(
+	workflowId: string,
+	definition?: WorkflowDefinition
+): Promise<WorkflowCompileResult> {
+	const r = await fetch(`/api/v1/workflows/${workflowId}/compile`, {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({ definition }),
+	})
+	if (!r.ok) await throwOnError(r)
+	return r.json() as Promise<WorkflowCompileResult>
 }

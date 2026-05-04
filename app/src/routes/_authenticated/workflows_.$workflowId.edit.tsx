@@ -10,7 +10,11 @@ import { RunTerminalPanel } from "@/components/workflow-editor/RunTerminalPanel"
 import { WorkflowCanvas } from "@/components/workflow-editor/WorkflowCanvas"
 import { WorkflowEditorToolbar } from "@/components/workflow-editor/WorkflowEditorToolbar"
 import { useWorkflowEditor } from "@/hooks/use-workflow-editor"
-import { getWorkflow, triggerRun } from "@/lib/api/workflows"
+import {
+	compileWorkflowDefinition,
+	getWorkflow,
+	triggerRun,
+} from "@/lib/api/workflows"
 import type { WorkflowDefinition } from "@/types/workflow"
 
 export const Route = createFileRoute(
@@ -114,6 +118,16 @@ function EditorInner({
 	}, [editor])
 
 	const handleRun = async () => {
+		const compileResult = await compileWorkflowDefinition(workflowId, {
+			nodes: editor.nodes,
+			edges: editor.edges,
+		})
+		if (compileResult.errors.length > 0) {
+			toast.error(
+				compileResult.errors[0]?.message ?? "Workflow compilation failed"
+			)
+			return
+		}
 		// Auto-save first so the run uses the latest definition
 		if (editor.isDirty) {
 			await editor.save()

@@ -56,6 +56,14 @@ describe("resolveExpressions", () => {
 			expect(result.x).toBe(1);
 		});
 
+		it("resolves an array index path", () => {
+			const result = resolveExpressions(
+				{ first: "{{ steps.step-b.output.items[0] }}" },
+				outputs,
+			);
+			expect(result.first).toBe("foo");
+		});
+
 		it("returns undefined for an unknown step", () => {
 			const result = resolveExpressions(
 				{ x: "{{ steps.unknown.output.value }}" },
@@ -98,6 +106,16 @@ describe("resolveExpressions", () => {
 				outputs,
 			);
 			expect(result.msg).toBe("x=");
+		});
+
+		it("supports helper calls inside templates", () => {
+			const result = resolveExpressions(
+				{
+					msg: "User={{ coalesce(steps.missing.output.name, steps.step-a.output.name) }}",
+				},
+				outputs,
+			);
+			expect(result.msg).toBe("User=Alice");
 		});
 	});
 
