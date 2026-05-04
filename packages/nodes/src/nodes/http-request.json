@@ -1,7 +1,12 @@
 {
 	"type": "http-request",
+	"version": 1,
 	"label": "HTTP Request",
 	"description": "Sends an HTTP request to a URL and returns the response status code and body.",
+	"icon": "Globe",
+	"category": "HTTP",
+	"credentialTypes": ["header-auth", "query-auth"],
+	"retryable": true,
 	"configSchema": {
 		"type": "object",
 		"properties": {
@@ -15,16 +20,30 @@
 				"default": "GET",
 				"enum": ["GET", "POST", "PUT", "PATCH", "DELETE"]
 			},
+			"sendHeaders": {
+				"type": "boolean",
+				"description": "Enable custom request headers.",
+				"default": false
+			},
 			"headers": {
 				"type": "object",
 				"description": "HTTP headers as key-value string pairs.",
+				"x-field-type": "key-value",
+				"x-show-if": "config.sendHeaders === true",
 				"additionalProperties": {
 					"type": "string"
 				}
 			},
 			"body": {
 				"type": "string",
-				"description": "Raw request body (for POST / PUT / PATCH requests)."
+				"description": "Raw request body (for POST / PUT / PATCH requests).",
+				"x-field-type": "code",
+				"x-show-if": "['POST','PUT','PATCH'].includes(config.method)"
+			},
+			"credentialId": {
+				"type": "string",
+				"description": "Optional credential to attach to the request.",
+				"x-credential-type": "header-auth"
 			}
 		},
 		"required": ["url"]

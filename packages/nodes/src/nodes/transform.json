@@ -1,13 +1,16 @@
 {
 	"type": "transform",
+	"version": 1,
 	"label": "Transform",
 	"description": "Evaluates a JavaScript expression against the previous step's output and returns the result.",
+	"category": "Data",
 	"configSchema": {
 		"type": "object",
 		"properties": {
 			"expression": {
 				"type": "string",
-				"description": "A JavaScript expression evaluated with `output` (previous step data) and `previousOutputs` (all prior step outputs) in scope. The expression's return value becomes `result`."
+				"description": "A JavaScript expression evaluated with `output` (previous step data) and `previousOutputs` (all prior step outputs) in scope. The expression's return value becomes `result`.",
+				"x-field-type": "code"
 			},
 			"fromStep": {
 				"type": "string",

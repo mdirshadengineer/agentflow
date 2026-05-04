@@ -15,6 +15,7 @@ const ALLOWED_TABLES = new Set([
 	"workflow_run_steps",
 	"node_executions",
 	"agent_sessions",
+	"credentials",
 ]);
 
 /**

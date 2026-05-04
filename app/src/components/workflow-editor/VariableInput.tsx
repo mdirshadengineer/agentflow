@@ -18,13 +18,13 @@ const MAX_ARRAY_PREVIEW_ITEMS = 3
 const MAX_STRING_HINT_LENGTH = 30
 
 /** Build the base variable expression for a node. */
-function nodeBaseVar(label: string): string {
-	return `{{ steps.${label}.output }}`
+function nodeBaseVar(stepId: string): string {
+	return `{{ steps.${stepId}.output }}`
 }
 
 /** Build a specific-path variable expression. */
-function nodePathVar(label: string, path: string): string {
-	return `{{ steps.${label}.output.${path} }}`
+function nodePathVar(stepId: string, path: string): string {
+	return `{{ steps.${stepId}.output.${path} }}`
 }
 
 /** Find `{{` immediately before the cursor position in `value`. */
@@ -112,11 +112,12 @@ function getSuggestions(
 
 	for (const n of nodes) {
 		const lbl = (n.data as { label?: string }).label ?? n.id.slice(0, 8)
+		const stepId = n.id
 		const outputData = upstreamOutputs?.get(n.id)
 
 		if (outputData && Object.keys(outputData).length > 0) {
 			// Include the base expression (full output object)
-			const baseVar = nodeBaseVar(lbl)
+			const baseVar = nodeBaseVar(stepId)
 			if (typed === "" || baseVar.toLowerCase().includes(typed)) {
 				suggestions.push({
 					node: n,
@@ -128,7 +129,7 @@ function getSuggestions(
 			// Add one entry per flattened path in the output
 			const paths = flattenPaths(outputData)
 			for (const { path, value: pathVal } of paths) {
-				const pathVar = nodePathVar(lbl, path)
+				const pathVar = nodePathVar(stepId, path)
 				if (typed === "" || pathVar.toLowerCase().includes(typed)) {
 					suggestions.push({
 						node: n,
@@ -140,7 +141,7 @@ function getSuggestions(
 			}
 		} else {
 			// No output data — fall back to the generic base expression
-			const baseVar = nodeBaseVar(lbl)
+			const baseVar = nodeBaseVar(stepId)
 			if (typed === "" || baseVar.toLowerCase().includes(typed)) {
 				suggestions.push({ node: n, label: lbl, variable: baseVar })
 			}

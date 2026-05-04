@@ -73,4 +73,5 @@ export type WorkflowEdge = Edge
 export interface WorkflowDefinition {
 	nodes: WorkflowNode[]
 	edges: WorkflowEdge[]
+	uiState?: Record<string, unknown>
 }

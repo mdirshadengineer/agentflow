@@ -1,7 +1,9 @@
 {
 	"type": "delay",
+	"version": 1,
 	"label": "Delay",
 	"description": "Pauses workflow execution for a specified number of milliseconds.",
+	"category": "Utility",
 	"configSchema": {
 		"type": "object",
 		"properties": {

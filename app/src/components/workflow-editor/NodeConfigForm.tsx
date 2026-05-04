@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import type { Agent } from "@/lib/api/agents"
-import type { NodeManifest, NodePropertySchema } from "@/lib/api/nodes"
+import type { NodeFieldSchema, NodeManifest } from "@/lib/api/nodes"
 import type { NodeTestOutput } from "@/lib/api/workflows"
 import { cn } from "@/lib/utils"
 import type { WorkflowNode } from "@/types/workflow"
@@ -50,9 +50,9 @@ export function hasMandatoryUnset(
 	schema: NodeManifest["configSchema"],
 	data: Record<string, unknown>
 ): boolean {
-	if (!schema.required || schema.required.length === 0) return false
-	return schema.required.some((key) => {
-		const v = data[key]
+	return schema.fields.some((field) => {
+		if (!field.required) return false
+		const v = data[field.key]
 		return v === undefined || v === null || v === ""
 	})
 }
@@ -60,30 +60,56 @@ export function hasMandatoryUnset(
 // ── Schema-driven form ────────────────────────────────────────────────────────
 
 interface FieldProps {
-	fieldKey: string
-	prop: NodePropertySchema
+	field: NodeFieldSchema
 	value: unknown
-	required: boolean
 	upstreamNodes: WorkflowNode[]
 	upstreamOutputs?: Map<string, Record<string, unknown>>
 	onUpdate: (patch: Record<string, unknown>) => void
 }
 
+function evaluateVisibilityRule(
+	rule: string | undefined,
+	data: Record<string, unknown>
+): boolean {
+	if (!rule) return true
+	const equality = rule.match(
+		/^config\.([A-Za-z0-9_]+)\s*===\s*(true|false|'[^']*'|"[^"]*")$/
+	)
+	if (equality) {
+		const [, key, rawValue] = equality
+		const expected =
+			rawValue === "true"
+				? true
+				: rawValue === "false"
+					? false
+					: rawValue.slice(1, -1)
+		return data[key] === expected
+	}
+	const includes = rule.match(/^\[(.+)\]\.includes\(config\.([A-Za-z0-9_]+)\)$/)
+	if (includes) {
+		const [, rawItems, key] = includes
+		const items = rawItems
+			.split(",")
+			.map((item) => item.trim().replace(/^['"]|['"]$/g, ""))
+		return items.includes(String(data[key] ?? ""))
+	}
+	return true
+}
+
 function SchemaField({
-	fieldKey,
-	prop,
+	field,
 	value,
-	required,
 	upstreamNodes,
 	upstreamOutputs,
 	onUpdate,
 }: FieldProps) {
+	const fieldKey = field.key
 	const isEmpty = value === undefined || value === null || value === ""
 
 	const label = (
 		<FieldLabel>
-			{fieldKey}
-			{required && (
+			{field.label}
+			{field.required && (
 				<span
 					className="ml-0.5 text-destructive font-bold"
 					aria-label="required"
@@ -95,84 +121,85 @@ function SchemaField({
 	)
 
 	const inputRingCls =
-		required && isEmpty
+		field.required && isEmpty
 			? "ring-1 ring-destructive focus-visible:ring-destructive"
 			: ""
 
-	if (prop.enum) {
+	if (field.type === "select" && field.enum) {
 		return (
 			<Field>
 				{label}
 				<Select
-					value={String(value ?? prop.default ?? "")}
+					value={String(value ?? field.defaultValue ?? "")}
 					onValueChange={(v) => onUpdate({ [fieldKey]: v })}
 				>
 					<SelectTrigger className={cn("h-7 text-xs w-full", inputRingCls)}>
 						<SelectValue />
 					</SelectTrigger>
 					<SelectContent>
-						{prop.enum.map((opt) => (
-							<SelectItem key={opt} value={opt}>
-								{opt}
+						{field.enum.map((opt) => (
+							<SelectItem key={opt.value} value={opt.value}>
+								{opt.label}
 							</SelectItem>
 						))}
 					</SelectContent>
 				</Select>
-				{prop.description && (
+				{field.description && (
 					<p className="text-[10px] text-muted-foreground">
-						{prop.description}
+						{field.description}
 					</p>
 				)}
 			</Field>
 		)
 	}
 
-	if (prop.type === "boolean") {
+	if (field.type === "toggle") {
 		return (
 			<Field>
 				<div className="flex items-center gap-2">
 					<input
 						type="checkbox"
 						id={`schema-${fieldKey}`}
-						checked={Boolean(value ?? prop.default ?? false)}
+						checked={Boolean(value ?? field.defaultValue ?? false)}
 						onChange={(e) => onUpdate({ [fieldKey]: e.target.checked })}
 						className="size-3.5 rounded border"
 					/>
 					{label}
 				</div>
-				{prop.description && (
+				{field.description && (
 					<p className="text-[10px] text-muted-foreground">
-						{prop.description}
+						{field.description}
 					</p>
 				)}
 			</Field>
 		)
 	}
 
-	if (prop.type === "number") {
+	if (field.type === "number") {
 		return (
 			<Field>
 				{label}
 				<Input
 					type="number"
-					min={prop.minimum}
-					value={String(value ?? prop.default ?? "")}
+					min={field.validation?.min}
+					max={field.validation?.max}
+					value={String(value ?? field.defaultValue ?? "")}
 					onChange={(e) => {
 						const n = e.target.valueAsNumber
 						onUpdate({ [fieldKey]: Number.isFinite(n) ? n : undefined })
 					}}
 					className={cn("h-7 text-xs", inputRingCls)}
 				/>
-				{prop.description && (
+				{field.description && (
 					<p className="text-[10px] text-muted-foreground">
-						{prop.description}
+						{field.description}
 					</p>
 				)}
 			</Field>
 		)
 	}
 
-	if (prop.type === "object") {
+	if (field.type === "json" || field.type === "keyValue") {
 		return (
 			<Field>
 				{label}
@@ -180,7 +207,7 @@ function SchemaField({
 					value={
 						typeof value === "string"
 							? value
-							: JSON.stringify(value ?? prop.default ?? {}, null, 2)
+							: JSON.stringify(value ?? field.defaultValue ?? {}, null, 2)
 					}
 					onChange={(e) => {
 						try {
@@ -192,46 +219,45 @@ function SchemaField({
 					rows={4}
 					className={cn("text-xs font-mono", inputRingCls)}
 				/>
-				{prop.description && (
+				{field.description && (
 					<p className="text-[10px] text-muted-foreground">
-						{prop.description}
+						{field.description}
 					</p>
 				)}
 			</Field>
 		)
 	}
 
-	// x-field-type: "password"
-	if (prop["x-field-type"] === "password") {
+	if (field.type === "credential") {
 		return (
 			<Field>
 				{label}
 				<Input
-					type="password"
-					value={String(value ?? prop.default ?? "")}
+					value={String(value ?? field.defaultValue ?? "")}
 					onChange={(e) => onUpdate({ [fieldKey]: e.target.value })}
 					className={cn("h-7 text-xs", inputRingCls)}
-					autoComplete="off"
+					placeholder={field.credentialType ?? "credential-id"}
 				/>
-				{prop.description && (
+				{field.description && (
 					<p className="text-[10px] text-muted-foreground">
-						{prop.description}
+						{field.description}
 					</p>
 				)}
 			</Field>
 		)
 	}
 
-	// x-field-type: "code" or multiline string
 	if (
-		prop["x-field-type"] === "code" ||
-		isMultiline(fieldKey, prop.description)
+		field.type === "code" ||
+		field.type === "expression" ||
+		field.type === "textarea" ||
+		isMultiline(fieldKey, field.description)
 	) {
 		return (
 			<Field>
 				{label}
 				<VariableInput
-					value={String(value ?? prop.default ?? "")}
+					value={String(value ?? field.defaultValue ?? "")}
 					onChange={(v) => onUpdate({ [fieldKey]: v })}
 					upstreamNodes={upstreamNodes}
 					upstreamOutputs={upstreamOutputs}
@@ -239,9 +265,9 @@ function SchemaField({
 					rows={4}
 					className={cn(inputRingCls)}
 				/>
-				{prop.description && (
+				{field.description && (
 					<p className="text-[10px] text-muted-foreground">
-						{prop.description}
+						{field.description}
 					</p>
 				)}
 			</Field>
@@ -253,14 +279,15 @@ function SchemaField({
 		<Field>
 			{label}
 			<VariableInput
-				value={String(value ?? prop.default ?? "")}
+				value={String(value ?? field.defaultValue ?? "")}
 				onChange={(v) => onUpdate({ [fieldKey]: v })}
 				upstreamNodes={upstreamNodes}
 				upstreamOutputs={upstreamOutputs}
 				className={inputRingCls}
+				placeholder={field.placeholder}
 			/>
-			{prop.description && (
-				<p className="text-[10px] text-muted-foreground">{prop.description}</p>
+			{field.description && (
+				<p className="text-[10px] text-muted-foreground">{field.description}</p>
 			)}
 		</Field>
 	)
@@ -279,19 +306,18 @@ export function SchemaFormFields({
 	upstreamNodes?: WorkflowNode[]
 	upstreamOutputs?: Map<string, Record<string, unknown>>
 }) {
-	const entries = Object.entries(schema.properties ?? {})
-	if (entries.length === 0) return null
-	const requiredSet = new Set(schema.required ?? [])
+	const fields = schema.fields.filter((field) =>
+		evaluateVisibilityRule(field.visibleWhen?.when, data)
+	)
+	if (fields.length === 0) return null
 
 	return (
 		<>
-			{entries.map(([key, prop]) => (
+			{fields.map((field) => (
 				<SchemaField
-					key={key}
-					fieldKey={key}
-					prop={prop}
-					value={data[key]}
-					required={requiredSet.has(key)}
+					key={field.key}
+					field={field}
+					value={data[field.key]}
 					upstreamNodes={upstreamNodes}
 					upstreamOutputs={upstreamOutputs}
 					onUpdate={onUpdate}
@@ -617,7 +643,7 @@ export function NodeFormBody({
 			)}
 			{!isBuiltIn && (
 				<SchemaFormFields
-					schema={manifest?.configSchema ?? { type: "object", properties: {} }}
+					schema={manifest?.configSchema ?? { fields: [] }}
 					data={node.data as Record<string, unknown>}
 					onUpdate={onUpdate}
 					upstreamNodes={upstreamNodes}

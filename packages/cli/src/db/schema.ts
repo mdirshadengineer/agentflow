@@ -109,3 +109,28 @@ export const agentSessions = sqliteTable("agent_sessions", {
 		.notNull()
 		.default(sql`(unixepoch('now') * 1000)`),
 });
+
+/**
+ * Encrypted credentials store.
+ *
+ * The `data` column contains an AES-256-GCM encrypted JSON blob.
+ * The plaintext is never exposed via the REST API — only the id, name,
+ * and type are returned to the frontend.
+ */
+export const credentials = sqliteTable("credentials", {
+	id: text("id").primaryKey(),
+	name: text("name").notNull(),
+	/** Credential type identifier, e.g. "header-auth" or "api-key". */
+	type: text("type").notNull(),
+	/** AES-256-GCM encrypted JSON: `{ iv, authTag, ciphertext }` (all hex). */
+	data: text("data").notNull(),
+	ownerId: text("owner_id")
+		.notNull()
+		.references(() => users.id, { onDelete: "cascade" }),
+	createdAt: integer("created_at", { mode: "timestamp_ms" })
+		.notNull()
+		.default(sql`(unixepoch('now') * 1000)`),
+	updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+		.notNull()
+		.default(sql`(unixepoch('now') * 1000)`),
+});

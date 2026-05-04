@@ -11,6 +11,11 @@ export { subworkflowExecutor } from "./executors/subworkflow.js";
 export { transformExecutor } from "./executors/transform.js";
 export type { NodeManifest } from "./manifest.js";
 export { allManifests, getManifest } from "./manifest.js";
+export {
+	allNodeCatalogEntries,
+	allNodeDefinitions,
+	getNodeDefinition,
+} from "./node-definitions.js";
 
 // ── Registration ──────────────────────────────────────────────────────────────
 export { registerAll } from "./register.js";

@@ -1,7 +1,9 @@
 {
 	"type": "noop",
+	"version": 1,
 	"label": "No-Op",
 	"description": "Passes through without performing any action. Useful as a placeholder or synchronisation barrier.",
+	"category": "Utility",
 	"configSchema": {
 		"type": "object",
 		"properties": {},

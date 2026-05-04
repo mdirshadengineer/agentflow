@@ -123,10 +123,10 @@ function InputPanel({
 
 				const outputData = nodeOutputs?.get(upstream.id)
 
-				const outputProps = manifest?.outputSchema
+				const outputProps = manifest?.outputJsonSchema
 					? Object.entries(
 							(
-								manifest.outputSchema as {
+								manifest.outputJsonSchema as {
 									properties?: Record<
 										string,
 										{ type?: string; description?: string }
@@ -172,7 +172,7 @@ function InputPanel({
 									Reference via{" "}
 									<code className="font-mono">
 										{"{{ steps."}
-										{upstreamLabel}
+										{upstream.id}
 										{".output.field }}"}
 									</code>
 								</p>
@@ -197,7 +197,11 @@ function InputPanel({
 								))}
 								<p className="text-[9px] text-muted-foreground/50 pt-1">
 									Reference via{" "}
-									<code className="font-mono">{"{{ nodeId.field }}"}</code>
+									<code className="font-mono">
+										{"{{ steps."}
+										{upstream.id}
+										{".output.field }}"}
+									</code>
 								</p>
 							</div>
 						) : (
@@ -678,42 +682,37 @@ export function NodeConfigModal({
 										<p className="text-xs text-muted-foreground leading-relaxed">
 											{manifest?.description}
 										</p>
-										{manifest?.configSchema?.properties &&
-											Object.keys(manifest.configSchema.properties).length >
-												0 && (
+										{manifest?.configSchema?.fields &&
+											manifest.configSchema.fields.length > 0 && (
 												<div className="mt-4 space-y-2">
 													<p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
 														Configuration fields
 													</p>
-													{Object.entries(manifest.configSchema.properties).map(
-														([key, prop]) => (
-															<div
-																key={key}
-																className="rounded-md border bg-muted/30 px-3 py-2"
-															>
-																<div className="flex items-center gap-1.5">
-																	<code className="text-[10px] font-mono text-primary">
-																		{key}
-																	</code>
-																	<span className="text-[9px] text-muted-foreground/60 bg-muted rounded px-1">
-																		{prop.type ?? "string"}
+													{manifest.configSchema.fields.map((field) => (
+														<div
+															key={field.key}
+															className="rounded-md border bg-muted/30 px-3 py-2"
+														>
+															<div className="flex items-center gap-1.5">
+																<code className="text-[10px] font-mono text-primary">
+																	{field.key}
+																</code>
+																<span className="text-[9px] text-muted-foreground/60 bg-muted rounded px-1">
+																	{field.type}
+																</span>
+																{field.required && (
+																	<span className="text-[9px] text-destructive font-medium">
+																		required
 																	</span>
-																	{manifest.configSchema.required?.includes(
-																		key
-																	) && (
-																		<span className="text-[9px] text-destructive font-medium">
-																			required
-																		</span>
-																	)}
-																</div>
-																{prop.description && (
-																	<p className="text-[10px] text-muted-foreground mt-1">
-																		{prop.description}
-																	</p>
 																)}
 															</div>
-														)
-													)}
+															{field.description && (
+																<p className="text-[10px] text-muted-foreground mt-1">
+																	{field.description}
+																</p>
+															)}
+														</div>
+													))}
 												</div>
 											)}
 									</div>

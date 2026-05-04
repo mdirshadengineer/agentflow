@@ -1,9 +1,12 @@
 import {
-	buildDag,
+	compileWorkflow,
 	defaultNodeRegistry,
 	WorkflowExecutor,
 } from "@mdirshadengineer/agentflow-core";
-import { registerAll } from "@mdirshadengineer/agentflow-nodes";
+import {
+	allNodeCatalogEntries,
+	registerAll,
+} from "@mdirshadengineer/agentflow-nodes";
 import { eq } from "drizzle-orm";
 import { getDb, workflows } from "../db/index.js";
 import { POLL_INTERVAL_MS } from "../global.config.js";
@@ -64,7 +67,16 @@ function createWorker() {
 			return;
 		}
 
-		const definition = buildDag(rawDefinition);
+		const { definition, errors } = compileWorkflow(rawDefinition, {
+			nodeCatalog: allNodeCatalogEntries,
+		});
+
+		if (errors.length > 0) {
+			await queue.markDone(runId, "failed", {
+				error: errors.map((entry) => entry.message).join(" "),
+			});
+			return;
+		}
 
 		try {
 			const finalStatus = await executor.run(runId, workflowId, definition);
